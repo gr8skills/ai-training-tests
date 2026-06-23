@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin · AI Training Test Results</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    .login-card { max-width: 380px; margin: 60px auto; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 24px; text-align: center; }
+    .login-card h1 { font-size: 20px; margin: 0 0 6px; }
+    .login-card p { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+    .login-card input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px 13px; font-size: 15px; font-family: inherit; margin-bottom: 12px; }
+    .login-card input:focus { outline: none; border-color: var(--accent); }
+    .login-err { color: var(--bad); font-size: 13px; min-height: 18px; margin-bottom: 10px; }
+
+    .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .admin-head h1 { font-size: 22px; margin: 0; }
+    .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .stat .v { font-size: 26px; font-weight: 800; }
+    .stat .k { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .toolbar input { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-size: 14px; font-family: inherit; min-width: 220px; }
+    .toolbar input:focus { outline: none; border-color: var(--accent); }
+    .toolbar select { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 14px; font-family: inherit; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table.results { width: 100%; border-collapse: collapse; font-size: 14px; }
+    table.results th, table.results td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    table.results th { background: var(--panel-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); cursor: pointer; user-select: none; position: sticky; top: 0; }
+    table.results th:hover { color: var(--text); }
+    table.results tbody tr:hover { background: var(--panel); }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .badge.quiz { background: #1e3046; color: #9ecbff; }
+    .badge.task { background: #2a2340; color: #c9b3ff; }
+    .pctcell { font-weight: 700; }
+    .pct-hi { color: var(--good); } .pct-mid { color: var(--warn); } .pct-lo { color: var(--bad); }
+    .details-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; }
+    .details-btn:hover { color: var(--text); border-color: var(--accent); }
+    .json-row td { background: var(--bg); }
+    .json-row pre { margin: 0; max-height: 260px; overflow: auto; font-size: 12px; }
+    .empty { text-align: center; color: var(--muted); padding: 40px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🔐 Admin · Results</div>
+    <div class="sub">AI Training Test — collected attempts</div>
+  </header>
+
+  <!-- Login view -->
+  <div id="login" class="admin-wrap">
+    <div class="login-card">
+      <h1>Enter admin passcode</h1>
+      <p>Results are private. Enter the passcode to view all submitted attempts.</p>
+      <input id="passcode" type="password" placeholder="Passcode" autocomplete="current-password" />
+      <div id="login-err" class="login-err"></div>
+      <button id="login-btn" class="btn btn-primary" style="width:100%">View results</button>
+    </div>
+  </div>
+
+  <!-- Dashboard view -->
+  <div id="dash" class="admin-wrap" hidden>
+    <div class="admin-head">
+      <h1>Results <span id="count-pill" class="pill"></span></h1>
+      <div class="admin-actions">
+        <button id="refresh-btn" class="btn btn-ghost btn-sm">↻ Refresh</button>
+        <button id="csv-btn" class="btn btn-ghost btn-sm">⬇ Export CSV</button>
+        <button id="logout-btn" class="btn btn-ghost btn-sm">Log out</button>
+      </div>
+    </div>
+
+    <div id="stats" class="stats"></div>
+
+    <div class="toolbar">
+      <input id="search" type="text" placeholder="Filter by participant name…" />
+      <select id="mode-filter">
+        <option value="">All modes</option>
+        <option value="quiz">Quiz only</option>
+        <option value="task">Rating tasks only</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="results">
+        <thead>
+          <tr>
+            <th data-sort="created_at">When</th>
+            <th data-sort="participant">Participant</th>
+            <th data-sort="mode">Mode</th>
+            <th data-sort="track">Track</th>
+            <th data-sort="score">Score</th>
+            <th data-sort="percentage">%</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty" hidden>No results match your filter yet.</div>
+  </div>
+
+  <footer class="footer">
+    <span>Admin view · data served via a passcode-protected database function · not indexed</span>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+    var URL = "https://tykfaithdicdpeppxkxw.supabase.co";
+    var KEY = "sb_publishable_jwOhhFGUtjcV_HAhNwQIdg_b1-d46Bm";
+    var RPC = URL + "/rest/v1/rpc/admin_get_results";
+
+    var $ = function (s) { return document.querySelector(s); };
+    var all = [];        // full result set
+    var sortKey = "created_at", sortDir = -1;
+
+    async function fetchResults(passcode) {
+      var res = await fetch(RPC, {
+        method: "POST",
+        headers: {
+          "apikey": KEY,
+          "Authorization": "Bearer " + KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ passcode: passcode })
+      });
+      if (!res.ok) {
+        if (res.status === 403 || res.status === 401 || res.status === 400) {
+          throw new Error("Incorrect passcode.");
+        }
+        throw new Error("Server error (" + res.status + ").");
+      }
+      return res.json();
+    }
+
+    function login(passcode) {
+      $("#login-err").textContent = "";
+      $("#login-btn").disabled = true;
+      $("#login-btn").textContent = "Checking…";
+      fetchResults(passcode).then(function (rows) {
+        sessionStorage.setItem("adminPass", passcode);
+        all = rows;
+        showDash();
+      }).catch(function (e) {
+        $("#login-err").textContent = e.message;
+      }).finally(function () {
+        $("#login-btn").disabled = false;
+        $("#login-btn").textContent = "View results";
+      });
+    }
+
+    function showDash() {
+      $("#login").hidden = true;
+      $("#dash").hidden = false;
+      renderStats();
+      render();
+    }
+
+    function logout() {
+      sessionStorage.removeItem("adminPass");
+      all = [];
+      $("#dash").hidden = true;
+      $("#login").hidden = false;
+      $("#passcode").value = "";
+    }
+
+    function refresh() {
+      var p = sessionStorage.getItem("adminPass");
+      if (!p) return logout();
+      fetchResults(p).then(function (rows) { all = rows; renderStats(); render(); })
+        .catch(function () { logout(); });
+    }
+
+    function pctClass(p) { return p >= 80 ? "pct-hi" : p >= 60 ? "pct-mid" : "pct-lo"; }
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+
+    function renderStats() {
+      var total = all.length;
+      var people = {};
+      all.forEach(function (r) { if (r.participant) people[r.participant] = 1; });
+      var quizzes = all.filter(function (r) { return r.mode === "quiz"; }).length;
+      var tasks = all.filter(function (r) { return r.mode === "task"; }).length;
+      var avg = total ? Math.round(all.reduce(function (s, r) { return s + r.percentage; }, 0) / total) : 0;
+      var stats = [
+        { v: total, k: "Total attempts" },
+        { v: Object.keys(people).length, k: "Unique participants" },
+        { v: avg + "%", k: "Average score" },
+        { v: quizzes, k: "Quizzes" },
+        { v: tasks, k: "Rating-task sets" }
+      ];
+      $("#stats").innerHTML = stats.map(function (s) {
+        return '<div class="stat"><div class="v">' + s.v + '</div><div class="k">' + s.k + '</div></div>';
+      }).join("");
+      $("#count-pill").textContent = total + " row" + (total === 1 ? "" : "s");
+    }
+
+    function currentRows() {
+      var q = $("#search").value.trim().toLowerCase();
+      var mode = $("#mode-filter").value;
+      var rows = all.filter(function (r) {
+        if (mode && r.mode !== mode) return false;
+        if (q && !(r.participant || "").toLowerCase().includes(q)) return false;
+        return true;
+      });
+      rows.sort(function (a, b) {
+        var av = a[sortKey], bv = b[sortKey];
+        if (sortKey === "score") { av = a.score / a.total; bv = b.score / b.total; }
+        if (av == null) av = ""; if (bv == null) bv = "";
+        if (av < bv) return -1 * sortDir;
+        if (av > bv) return 1 * sortDir;
+        return 0;
+      });
+      return rows;
+    }
+
+    function render() {
+      var rows = currentRows();
+      var tbody = $("#rows");
+      tbody.innerHTML = "";
+      $("#empty").hidden = rows.length > 0;
+      rows.forEach(function (r, i) {
+        var tr = document.createElement("tr");
+        var when = new Date(r.created_at).toLocaleString();
+        tr.innerHTML =
+          '<td>' + esc(when) + '</td>' +
+          '<td>' + esc(r.participant || "—") + '</td>' +
+          '<td><span class="badge ' + r.mode + '">' + esc(r.mode) + '</span></td>' +
+          '<td>' + esc(r.track || "—") + '</td>' +
+          '<td>' + r.score + ' / ' + r.total + '</td>' +
+          '<td class="pctcell ' + pctClass(r.percentage) + '">' + r.percentage + '%</td>' +
+          '<td><button class="details-btn" data-i="' + i + '">view</button></td>';
+        tbody.appendChild(tr);
+        var jr = document.createElement("tr");
+        jr.className = "json-row";
+        jr.hidden = true;
+        jr.innerHTML = '<td colspan="7"><pre>' + esc(JSON.stringify(r.details, null, 2)) + '</pre></td>';
+        tbody.appendChild(jr);
+      });
+      tbody.querySelectorAll(".details-btn").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var jr = b.closest("tr").nextElementSibling;
+          jr.hidden = !jr.hidden;
+          b.textContent = jr.hidden ? "view" : "hide";
+        });
+      });
+    }
+
+    function exportCsv() {
+      var rows = currentRows();
+      var cols = ["created_at", "participant", "mode", "track", "score", "total", "percentage"];
+      var lines = [cols.join(",")];
+      rows.forEach(function (r) {
+        lines.push(cols.map(function (c) {
+          var v = r[c] == null ? "" : String(r[c]);
+          return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+        }).join(","));
+      });
+      var blob = new Blob([lines.join("\n")], { type: "text/csv" });
+      var a = document.createElement("a");
+      a.href = window.URL.createObjectURL(blob);
+      a.download = "ai-training-results.csv";
+      a.click();
+      window.URL.revokeObjectURL(a.href);
+    }
+
+    // ---- wire up ----
+    $("#login-btn").addEventListener("click", function () {
+      var p = $("#passcode").value.trim();
+      if (p) login(p);
+    });
+    $("#passcode").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { var p = $("#passcode").value.trim(); if (p) login(p); }
+    });
+    $("#logout-btn").addEventListener("click", logout);
+    $("#refresh-btn").addEventListener("click", refresh);
+    $("#csv-btn").addEventListener("click", exportCsv);
+    $("#search").addEventListener("input", render);
+    $("#mode-filter").addEventListener("change", render);
+    document.querySelectorAll("th[data-sort]").forEach(function (th) {
+      th.addEventListener("click", function () {
+        var k = th.dataset.sort;
+        if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = (k === "created_at" || k === "percentage" || k === "score") ? -1 : 1; }
+        render();
+      });
+    });
+
+    // auto-login if a passcode is already in this tab's session
+    var saved = sessionStorage.getItem("adminPass");
+    if (saved) {
+      fetchResults(saved).then(function (rows) { all = rows; showDash(); }).catch(function () { sessionStorage.removeItem("adminPass"); });
+    }
+  })();
+  </script>
+</body>
+</html>
