@@ -586,12 +586,50 @@
     showScreen("screen-results");
   }
 
+  // ---- reusable in-app confirm modal (replaces native confirm/alert) ----
+  function showConfirm(opts) {
+    const overlay = $("#modal-overlay");
+    const cBtn = $("#modal-confirm"), xBtn = $("#modal-cancel");
+    $("#modal-icon").textContent = opts.icon || "⚠️";
+    $("#modal-title").textContent = opts.title || "Are you sure?";
+    $("#modal-msg").textContent = opts.message || "";
+    cBtn.textContent = opts.confirmText || "Confirm";
+    xBtn.textContent = opts.cancelText || "Cancel";
+    cBtn.className = "btn " + (opts.danger === false ? "btn-primary" : "btn-danger");
+
+    function cleanup() {
+      overlay.hidden = true;
+      cBtn.removeEventListener("click", onYes);
+      xBtn.removeEventListener("click", onNo);
+      overlay.removeEventListener("mousedown", onBackdrop);
+      document.removeEventListener("keydown", onKey, true);
+    }
+    function onYes() { cleanup(); if (opts.onConfirm) opts.onConfirm(); }
+    function onNo() { cleanup(); if (opts.onCancel) opts.onCancel(); }
+    function onBackdrop(e) { if (e.target === overlay) onNo(); }
+    function onKey(e) {
+      if (e.key === "Escape") { e.preventDefault(); onNo(); }
+      else if (e.key === "Enter") { e.preventDefault(); onYes(); }
+    }
+    cBtn.addEventListener("click", onYes);
+    xBtn.addEventListener("click", onNo);
+    overlay.addEventListener("mousedown", onBackdrop);
+    document.addEventListener("keydown", onKey, true); // capture: runs before quiz keys
+    overlay.hidden = false;
+    xBtn.focus(); // default focus on the safe (cancel) action
+  }
+
+  function modalOpen() { return !$("#modal-overlay").hidden; }
+
   // ---- nav buttons ----
   function quit() {
-    stopTimer();
-    if (confirm("Quit this test? Your progress will be lost.")) {
-      showScreen("screen-home");
-    }
+    showConfirm({
+      title: "Quit this test?",
+      message: "Your progress on this attempt will be lost.",
+      confirmText: "Quit",
+      cancelText: "Keep going",
+      onConfirm: () => { stopTimer(); showScreen("screen-home"); }
+    });
   }
 
   // ---- wire up ----
@@ -608,6 +646,7 @@
     $("#btn-home").addEventListener("click", () => showScreen("screen-home"));
     // keyboard: 1-4 to select, Enter to submit/advance
     document.addEventListener("keydown", (e) => {
+      if (modalOpen()) return; // modal owns the keyboard while open
       if (!$("#screen-quiz").classList.contains("active")) return;
       if (e.key >= "1" && e.key <= "9") {
         const i = parseInt(e.key, 10) - 1;

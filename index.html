@@ -165,6 +165,19 @@
     <span>AI training practice tests · open <code>index.html</code> in any browser · add your own questions in <code>js/questions.js</code></span>
   </footer>
 
+  <!-- ===== Reusable confirm modal ===== -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-msg">
+      <div class="modal-icon" id="modal-icon">⚠️</div>
+      <h3 class="modal-title" id="modal-title"></h3>
+      <p class="modal-msg" id="modal-msg"></p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="modal-confirm" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/questions.js"></script>
   <script src="js/tasks.js"></script>
   <script src="js/app.js"></script>

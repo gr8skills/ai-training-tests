@@ -85,6 +85,23 @@ h1 { font-size: 26px; margin: 4px 0 12px; }
 .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .btn-ghost:hover { background: var(--panel-2); }
+.btn-danger { background: var(--bad); color: #fff; }
+.btn-danger:hover { background: #ff6b63; }
+
+/* ===== confirm modal ===== */
+.modal-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(5, 8, 12, .72); backdrop-filter: blur(2px); animation: fade .15s ease; }
+.modal-overlay[hidden] { display: none; }
+.modal { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 24px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 24px 60px rgba(0, 0, 0, .55); animation: pop .18s ease; }
+@keyframes pop { from { transform: scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-icon { font-size: 34px; line-height: 1; margin-bottom: 8px; }
+.modal-title { font-size: 18px; margin: 0 0 8px; }
+.modal-msg { color: var(--muted); font-size: 14px; margin: 0 0 22px; line-height: 1.5; }
+.modal-actions { display: flex; gap: 12px; justify-content: center; }
+.modal-actions .btn { min-width: 120px; }
+@media (max-width: 420px) {
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .btn { width: 100%; }
+}
 
 /* quiz */
 .quiz-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; }
