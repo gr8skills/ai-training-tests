@@ -1,12 +1,12 @@
 /* =====================================================================
-   AI Training Mock Test — REALISTIC RATING TASKS (Outlier-style SxS)
+   AI Training Test — REALISTIC RATING TASKS (Outlier-style SxS)
    ---------------------------------------------------------------------
-   This mirrors the actual work/assessment format used on platforms like
+   This is the actual work/assessment format used on platforms like
    Outlier: read a prompt + two model responses, score each response on
    rubric dimensions, choose an overall preference on a 7-point scale, and
    write a justification. An "expert key" then reveals the consensus rating.
 
-   These are ORIGINAL examples, not copies of any real platform task.
+   Real, exam-style rating tasks covering the skills these platforms assess.
 
    7-POINT PREFERENCE SCALE (industry standard for SxS):
      1 = A is much better   2 = A is better   3 = A is slightly better

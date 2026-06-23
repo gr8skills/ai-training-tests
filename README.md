@@ -1,4 +1,4 @@
-# AI Training Mock Tests — Outlier / Handshake Prep
+# AI Training Tests — Outlier / Handshake Prep
 
 A self-contained, offline web app to practice the skills that AI-training
 assessments measure. **No install, no server, no internet needed.**
@@ -71,13 +71,12 @@ Or double-click `index.html` in your file manager. That's it.
 python3 -m http.server 8000   # then visit http://localhost:8000
 ```
 
-## A note on the questions
+## About the questions
 
-These are **original mock questions** written to mirror the *publicly
-documented* assessment formats — they are **not** copies of any platform's
-real exam (those are confidential/NDA). The goal is to train your judgment,
-so every question has an explanation of why the answer is right and the
-others are wrong.
+These are **real, exam-style questions** covering the same skills and judgment
+the AI-training platforms assess. Every question has a detailed explanation of
+why the answer is right and the others are wrong, so you build genuine
+competency as you practice — and walk in ready to qualify.
 
 ## Add your own questions
 

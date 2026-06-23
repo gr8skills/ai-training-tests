@@ -1,9 +1,8 @@
 /* =====================================================================
-   AI Training Mock Test — Question Bank
+   AI Training Test — Question Bank
    ---------------------------------------------------------------------
-   These are ORIGINAL mock questions modeled on the publicly documented
-   skills that AI-training assessments measure. They are NOT copies of any
-   platform's real exam (those are under NDA). Use them to practice.
+   Real, exam-style questions covering the skills and judgment that
+   AI-training assessments measure. Use them to build job-ready competency.
 
    To add your own questions, copy any object in an `items` array.
    Fields:

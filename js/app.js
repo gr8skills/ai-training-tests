@@ -1,5 +1,5 @@
 /* =====================================================================
-   AI Training Mock Test — Quiz Engine
+   AI Training Test — Quiz Engine
    Pure vanilla JS, no dependencies. Reads QUESTIONS from questions.js.
    ===================================================================== */
 
