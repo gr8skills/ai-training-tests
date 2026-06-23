@@ -65,8 +65,45 @@
     state.opts.instant = $("#opt-instant").checked;
   }
 
+  // ---- participant name (persisted locally, sent with each result) ----
+  function getParticipant() {
+    const n = (localStorage.getItem("participantName") || "").trim();
+    return n || null;
+  }
+
+  // A name is required before any test can begin, so no anonymous results.
+  function requireName() {
+    const input = $("#participant-name");
+    const err = $("#name-error");
+    if (getParticipant()) { err.textContent = ""; input.classList.remove("invalid"); return true; }
+    err.textContent = "Please enter your name to begin — your results are saved under it.";
+    input.classList.add("invalid");
+    input.focus();
+    input.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  }
+
+  // ---- send a completed attempt to the central database ----
+  function persistResult(payload) {
+    const el = $("#save-status");
+    if (typeof DB === "undefined" || !DB.enabled) { el.textContent = ""; return; }
+    el.className = "save-status saving";
+    el.textContent = "💾 Saving your result…";
+    DB.saveResult(payload).then((r) => {
+      if (r.ok) {
+        el.className = "save-status ok";
+        el.textContent = "✓ Result saved to the central database.";
+      } else {
+        el.className = "save-status err";
+        el.textContent = "⚠ Couldn't save to the server (your score above is still valid). [" + r.reason + "]";
+        console.warn("Result save failed:", r);
+      }
+    });
+  }
+
   // ---- start a quiz ----
   function startQuiz(trackKey) {
+    if (!requireName()) return;
     readOpts();
     state.mode = "quiz";
     state.trackKey = trackKey;
@@ -289,6 +326,26 @@
     });
 
     showScreen("screen-results");
+
+    persistResult({
+      participant: getParticipant(),
+      mode: "quiz",
+      track: state.trackKey,
+      score: correctCount,
+      total: total,
+      percentage: pct,
+      details: {
+        perTrack: perTrack,
+        questions: state.items.map((q, i) => ({
+          type: q.type,
+          track: q._track,
+          chosen: state.answers[i],
+          correct: q.answer,
+          ok: state.answers[i] === q.answer
+        }))
+      },
+      user_agent: navigator.userAgent
+    });
   }
 
   // remove heavy block content from prompt for compact review headers
@@ -310,6 +367,7 @@
   const JUST_MIN = 40; // minimum justification characters
 
   function startTasks() {
+    if (!requireName()) return;
     readOpts();
     state.mode = "task";
     tstate.items = state.opts.shuffle ? shuffle(TASKS) : TASKS.slice();
@@ -584,6 +642,17 @@
     });
 
     showScreen("screen-results");
+
+    persistResult({
+      participant: getParticipant(),
+      mode: "task",
+      track: null,
+      score: prefCorrect,
+      total: total,
+      percentage: pct,
+      details: { tasks: r, fullPass: fullPass, dimHits: dimHits, dimTotal: dimTotal },
+      user_agent: navigator.userAgent
+    });
   }
 
   // ---- reusable in-app confirm modal (replaces native confirm/alert) ----
@@ -636,6 +705,16 @@
   function init() {
     buildHome();
     $("#task-count").textContent = TASKS.length;
+    // restore + persist participant name across sessions
+    const nameInput = $("#participant-name");
+    nameInput.value = localStorage.getItem("participantName") || "";
+    nameInput.addEventListener("input", () => {
+      localStorage.setItem("participantName", nameInput.value.trim());
+      if (nameInput.value.trim()) {
+        nameInput.classList.remove("invalid");
+        $("#name-error").textContent = "";
+      }
+    });
     $("#btn-mixed").addEventListener("click", () => startQuiz("mixed"));
     $("#btn-tasks").addEventListener("click", startTasks);
     $("#btn-next").addEventListener("click", onNext);

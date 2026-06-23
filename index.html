@@ -24,6 +24,12 @@
         explanation, so you learn as you go and walk in ready to qualify.
       </p>
 
+      <div class="name-field">
+        <label for="participant-name">Your name <span class="muted">(saved with your results so the admin can see who took the test)</span></label>
+        <input id="participant-name" type="text" maxlength="120" autocomplete="name" placeholder="e.g. Temitope J." />
+        <div id="name-error" class="name-error"></div>
+      </div>
+
       <div class="options-row">
         <label class="opt">
           <input type="checkbox" id="opt-timer" checked />
@@ -153,6 +159,7 @@
     <section id="screen-results" class="screen">
       <h1>Results</h1>
       <div id="score-summary" class="score-summary"></div>
+      <div id="save-status" class="save-status"></div>
       <div id="review-list" class="review-list"></div>
       <div class="results-actions">
         <button id="btn-retry" class="btn btn-primary">Retry this test</button>
@@ -178,6 +185,7 @@
     </div>
   </div>
 
+  <script src="js/db.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/tasks.js"></script>
   <script src="js/app.js"></script>
