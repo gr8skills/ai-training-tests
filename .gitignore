@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Test / tooling artifacts
+.playwright-mcp/
+*.log
+
+# Local archives
+*.zip

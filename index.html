@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Training Mock Tests — Outlier / Handshake Prep</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🧠 AI Training Mock Tests</div>
+    <div class="sub">Practice for Outlier AI &amp; Handshake AI style assessments</div>
+  </header>
+
+  <main id="app">
+    <!-- ===== Start / track selection screen ===== -->
+    <section id="screen-home" class="screen active">
+      <h1>Choose a practice test</h1>
+      <p class="lead">
+        These are <strong>mock</strong> tests modeled on the publicly documented
+        assessment formats used by AI-training platforms. They are not real exam
+        questions — they exist so you can practice the skills and judgment those
+        exams measure. Every question includes an explanation.
+      </p>
+
+      <div class="options-row">
+        <label class="opt">
+          <input type="checkbox" id="opt-timer" checked />
+          <span>Timed mode (90s per question)</span>
+        </label>
+        <label class="opt">
+          <input type="checkbox" id="opt-shuffle" checked />
+          <span>Shuffle questions</span>
+        </label>
+        <label class="opt">
+          <input type="checkbox" id="opt-instant" checked />
+          <span>Show explanation after each answer</span>
+        </label>
+      </div>
+
+      <h2 class="section-h">📋 Knowledge assessments <span class="muted">(multiple choice)</span></h2>
+      <p class="section-sub">Mirror the qualification quizzes: spot errors and judge correctness against a key.</p>
+      <div id="track-grid" class="track-grid"><!-- filled by JS --></div>
+
+      <div class="mixed-cta">
+        <button id="btn-mixed" class="btn btn-ghost">
+          🎲 Mixed exam — random questions from all tracks
+        </button>
+      </div>
+
+      <h2 class="section-h" style="margin-top:34px">⚖️ Realistic rating tasks <span class="muted">(the actual work)</span></h2>
+      <p class="section-sub">
+        This is the format that platforms like Outlier actually use — including
+        <strong>multi-turn conversation</strong> tasks. For each task you read a prompt (or a full
+        chat history) and <strong>two AI responses</strong>, score each on rubric dimensions, pick
+        an overall preference on a 7-point scale, and <strong>write a justification</strong> — then
+        an expert key shows the consensus rating and a model rationale to compare against.
+      </p>
+      <div class="task-cta">
+        <button id="btn-tasks" class="btn btn-primary btn-lg">
+          ⚖️ Start SxS rating tasks — <span id="task-count"></span> realistic items
+        </button>
+      </div>
+    </section>
+
+    <!-- ===== Quiz screen ===== -->
+    <section id="screen-quiz" class="screen">
+      <div class="quiz-head">
+        <div class="quiz-meta">
+          <span id="quiz-track" class="pill"></span>
+          <span id="quiz-progress" class="muted"></span>
+        </div>
+        <div class="quiz-head-right">
+          <span id="quiz-timer" class="timer"></span>
+          <button id="btn-quit" class="btn btn-ghost btn-sm">Quit</button>
+        </div>
+      </div>
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+
+      <div id="question-box" class="question-box"><!-- filled by JS --></div>
+
+      <div class="quiz-foot">
+        <div id="feedback" class="feedback"></div>
+        <button id="btn-next" class="btn btn-primary" disabled>Submit</button>
+      </div>
+    </section>
+
+    <!-- ===== Rating task screen ===== -->
+    <section id="screen-task" class="screen">
+      <div class="quiz-head">
+        <div class="quiz-meta">
+          <span id="task-domain" class="pill"></span>
+          <span id="task-progress" class="muted"></span>
+        </div>
+        <div class="quiz-head-right">
+          <span id="task-timer" class="timer"></span>
+          <button id="btn-task-quit" class="btn btn-ghost btn-sm">Quit</button>
+        </div>
+      </div>
+      <div class="progress-bar"><div id="task-progress-fill"></div></div>
+
+      <details class="guidelines">
+        <summary>📖 Rating guidelines (read me)</summary>
+        <ul>
+          <li><b>Instruction Following</b> — did the response do exactly what was asked, including format, length, and audience constraints?</li>
+          <li><b>Truthfulness / Accuracy</b> — are all claims correct? Penalize hallucinations and reasoning/calculation errors heavily.</li>
+          <li><b>Harmlessness</b> — is it safe? Watch for both harmful over-helpfulness and unnecessary over-refusal of benign requests.</li>
+          <li><b>Quality</b> — clarity, structure, and usefulness for the intended reader.</li>
+          <li><b>Context / Consistency</b> (multi-turn tasks) — did the reply use everything established earlier in the conversation: constraints the user gave, things already tried, and the tone/level set in prior turns?</li>
+          <li>Score each response <b>1 (poor) – 5 (excellent)</b> per dimension, then set an overall preference. Your justification must cite <b>specific, concrete differences</b>, not "A is just better".</li>
+        </ul>
+      </details>
+
+      <div id="task-instructions" class="task-instructions"></div>
+
+      <div class="task-prompt-box">
+        <div class="ctx-label" id="task-prompt-label">User prompt</div>
+        <div id="task-prompt"></div>
+        <div id="task-context"></div>
+      </div>
+
+      <div class="responses">
+        <div class="response-col">
+          <div class="response-head response-a" id="resp-head-a">Response A</div>
+          <div id="task-resp-a" class="response-body"></div>
+        </div>
+        <div class="response-col">
+          <div class="response-head response-b" id="resp-head-b">Response B</div>
+          <div id="task-resp-b" class="response-body"></div>
+        </div>
+      </div>
+
+      <h3 class="rubric-h">Rubric — score each response 1–5</h3>
+      <div id="rubric" class="rubric"></div>
+
+      <h3 class="rubric-h">Overall preference</h3>
+      <div id="pref-scale" class="pref-scale"></div>
+
+      <h3 class="rubric-h">Your justification <span class="req">(required, cite specifics)</span></h3>
+      <textarea id="justification" class="justification" rows="4"
+        placeholder="e.g. 'B follows the child-friendly instruction with an analogy, while A uses jargon (Rayleigh scattering). Both are accurate, but A ignored the audience…'"></textarea>
+      <div id="just-counter" class="just-counter"></div>
+
+      <div id="task-feedback" class="task-feedback"></div>
+
+      <div class="quiz-foot" style="justify-content:flex-end">
+        <button id="btn-task-submit" class="btn btn-primary">Submit rating</button>
+      </div>
+    </section>
+
+    <!-- ===== Results screen ===== -->
+    <section id="screen-results" class="screen">
+      <h1>Results</h1>
+      <div id="score-summary" class="score-summary"></div>
+      <div id="review-list" class="review-list"></div>
+      <div class="results-actions">
+        <button id="btn-retry" class="btn btn-primary">Retry this test</button>
+        <button id="btn-home" class="btn btn-ghost">Back to all tests</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Local mock tests · open <code>index.html</code> in any browser · add your own questions in <code>js/questions.js</code></span>
+  </footer>
+
+  <script src="js/questions.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
