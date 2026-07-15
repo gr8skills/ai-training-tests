@@ -63,6 +63,7 @@
     state.opts.timer = $("#opt-timer").checked;
     state.opts.shuffle = $("#opt-shuffle").checked;
     state.opts.instant = $("#opt-instant").checked;
+    state.opts.qty = parseInt($("#opt-qty").value, 10) || 10;
   }
 
   // ---- participant name (persisted locally, sent with each result) ----
@@ -109,18 +110,22 @@
     state.trackKey = trackKey;
 
     let items;
+    const qty = state.opts.qty;
     if (trackKey === "mixed") {
-      // pull everything, shuffle, cap at 12
+      // pool everything, then randomly sample the requested quantity
       items = [];
       Object.keys(QUESTIONS).forEach((k) => {
         QUESTIONS[k].items.forEach((q) => items.push(Object.assign({ _track: QUESTIONS[k].name }, q)));
       });
-      items = shuffle(items).slice(0, 12);
+      items = shuffle(items).slice(0, qty);
     } else {
-      items = QUESTIONS[trackKey].items.map((q) =>
-        Object.assign({ _track: QUESTIONS[trackKey].name }, q)
+      items = QUESTIONS[trackKey].items.map((q, i) =>
+        Object.assign({ _track: QUESTIONS[trackKey].name, _idx: i }, q)
       );
-      if (state.opts.shuffle) items = shuffle(items);
+      // random sample of the requested quantity from the track's bank
+      items = shuffle(items).slice(0, Math.min(qty, items.length));
+      // shuffle option controls presentation order, not the random sampling
+      if (!state.opts.shuffle) items.sort((a, b) => a._idx - b._idx);
     }
 
     state.items = items;

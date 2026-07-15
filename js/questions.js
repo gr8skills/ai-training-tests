@@ -1241,6 +1241,740 @@ const QUESTIONS = {
         explanation: "Create the branch first — <code>git branch feature</code> pins a label to the commit — then move main back with <code>git reset --hard HEAD~1</code>. The work is safe on <code>feature</code>, and main is clean. Order matters: resetting first would leave the commit unreferenced. Safe only because it wasn't pushed."
       }
     ]
+  },
+
+  /* ================= JAVASCRIPT SKILLS ================= */
+  javascript: {
+    name: "JavaScript Skills Verification",
+    icon: "🟨",
+    desc: "Core JS fluency: coercion, scope, closures, the event loop, async, and common traps.",
+    items: [
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>console.log(\"5\" == 5);\nconsole.log(\"5\" === 5);</code></pre>",
+        choices: ["true, true", "true, false", "false, false", "false, true"],
+        answer: 1,
+        explanation: "<code>==</code> performs type coercion, so <code>\"5\" == 5</code> is <b>true</b>. <code>===</code> compares type AND value with no coercion, so a string never strictly equals a number — <b>false</b>. Best practice: default to <code>===</code>."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does <code>typeof null</code> return?",
+        choices: ["\"null\"", "\"undefined\"", "\"object\"", "It throws an error"],
+        answer: 2,
+        explanation: "<code>typeof null</code> returns <b>\"object\"</b> — a famous historical bug kept for backward compatibility. To actually test for null, use <code>value === null</code>."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>console.log(\"5\" + 2);\nconsole.log(\"5\" - 2);</code></pre>",
+        choices: ["\"52\" then 3", "7 then 3", "\"52\" then \"3\"", "7 then \"52\""],
+        answer: 0,
+        explanation: "<code>+</code> with a string concatenates: <code>\"5\" + 2</code> → <b>\"52\"</b>. But <code>-</code> has no string meaning, so both operands coerce to numbers: <code>\"5\" - 2</code> → <b>3</b>. Asymmetric coercion between + and - is a classic JS trap."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>console.log(x);\nvar x = 5;</code></pre>",
+        choices: ["5", "undefined", "ReferenceError", "null"],
+        answer: 1,
+        explanation: "<code>var</code> declarations are <b>hoisted</b> to the top of their scope but the assignment stays in place — so <code>x</code> exists but is <code>undefined</code> at the log. With <code>let</code>/<code>const</code> the same code throws a ReferenceError (temporal dead zone)."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the key scoping difference between <code>var</code> and <code>let</code>?",
+        choices: [
+          "var is block-scoped; let is function-scoped.",
+          "let is block-scoped; var is function-scoped and leaks out of blocks like if/for.",
+          "They're identical; let is just newer syntax.",
+          "var is immutable; let can be reassigned."
+        ],
+        answer: 1,
+        explanation: "<code>let</code> (and <code>const</code>) are <b>block-scoped</b> — confined to the nearest <code>{}</code>. <code>var</code> is function-scoped, so a <code>var</code> inside an <code>if</code> block is visible outside it. Immutability is <code>const</code>'s job, not var/let's difference."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>function makeCounter() {\n  let count = 0;\n  return () => ++count;\n}\nconst a = makeCounter();\nconst b = makeCounter();\nconsole.log(a(), a(), b());</code></pre>",
+        choices: ["1 2 3", "1 2 1", "1 1 1", "0 1 0"],
+        answer: 1,
+        explanation: "Each <code>makeCounter()</code> call creates a fresh <code>count</code> captured by a <b>closure</b>. <code>a</code> increments its own counter twice (1, 2); <code>b</code> has an independent counter (1). Output: <b>1 2 1</b>."
+      },
+      {
+        type: "Predict the output",
+        prompt: "In what order does this print?",
+        context: "<pre><code>console.log(\"a\");\nsetTimeout(() => console.log(\"b\"), 0);\nPromise.resolve().then(() => console.log(\"c\"));\nconsole.log(\"d\");</code></pre>",
+        choices: ["a b c d", "a d c b", "a d b c", "a c d b"],
+        answer: 1,
+        explanation: "Synchronous code runs first (a, d). Then the event loop drains <b>microtasks</b> (promise callbacks → c) before <b>macrotasks</b> (setTimeout → b), even with a 0ms delay. Order: <b>a d c b</b>. Microtask-vs-macrotask ordering is a favorite interview/screening item."
+      },
+      {
+        type: "Best practice",
+        prompt: "What's the reliable way to check whether a value is <code>NaN</code>?",
+        choices: [
+          "value === NaN",
+          "Number.isNaN(value)",
+          "value == NaN",
+          "typeof value === \"NaN\""
+        ],
+        answer: 1,
+        explanation: "<code>NaN</code> is the only JS value not equal to itself, so <code>value === NaN</code> is always false. Use <code>Number.isNaN(value)</code> (strict, no coercion). Global <code>isNaN()</code> coerces first (<code>isNaN(\"hello\")</code> is true), which usually isn't what you want."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>map()</code> and <code>forEach()</code> on arrays?",
+        choices: [
+          "map returns a new array of transformed values; forEach returns undefined and is used for side effects.",
+          "forEach is faster, otherwise identical.",
+          "map mutates the original array; forEach doesn't.",
+          "forEach can break early; map cannot."
+        ],
+        answer: 0,
+        explanation: "<code>map</code> builds and returns a <b>new array</b> from the callback's return values; <code>forEach</code> ignores return values and yields <code>undefined</code> — it's for side effects. Neither mutates the source array, and neither supports <code>break</code> (use a plain loop or <code>some</code>/<code>every</code> for that)."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does <code>console.log(0.1 + 0.2 === 0.3)</code> print, and why?",
+        choices: [
+          "true — the math is exact.",
+          "false — binary floating-point can't represent 0.1 and 0.2 exactly, so the sum is 0.30000000000000004.",
+          "It throws a precision error.",
+          "true, but only in strict mode."
+        ],
+        answer: 1,
+        explanation: "IEEE-754 floats store decimals in binary, and 0.1/0.2 have no exact binary representation. The sum is 0.30000000000000004, so the comparison is <b>false</b>. Compare with a tolerance (<code>Math.abs(a-b) &lt; Number.EPSILON</code>) instead."
+      },
+      {
+        type: "Predict the output",
+        prompt: "Which line throws an error?",
+        context: "<pre><code>const arr = [1, 2];\narr.push(3);        // line A\narr = [4, 5];       // line B</code></pre>",
+        choices: [
+          "Line A — const arrays can't be modified.",
+          "Line B — const prevents reassigning the binding, but the array's contents can still change.",
+          "Both lines throw.",
+          "Neither line throws."
+        ],
+        answer: 1,
+        explanation: "<code>const</code> locks the <b>binding</b>, not the value. Mutating the array (<code>push</code>) is fine; reassigning the variable (<code>arr = ...</code>) throws TypeError. To prevent mutation you'd need <code>Object.freeze()</code>."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>const obj = {\n  name: \"Ada\",\n  regular() { return this.name; },\n  arrow: () => this.name\n};\nconsole.log(obj.regular(), obj.arrow());</code></pre>",
+        choices: [
+          "\"Ada\" \"Ada\"",
+          "\"Ada\" undefined",
+          "undefined \"Ada\"",
+          "undefined undefined"
+        ],
+        answer: 1,
+        explanation: "A regular method's <code>this</code> is the object it's called on → \"Ada\". An <b>arrow function has no own <code>this</code></b> — it inherits from the enclosing (module/global) scope, where <code>this.name</code> is undefined. Never use arrows as object methods that need <code>this</code>."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>const user = { profile: null };\nconsole.log(user.profile?.email);\nconsole.log(user.settings?.theme);</code></pre>",
+        choices: [
+          "TypeError on the first line",
+          "undefined then undefined — optional chaining short-circuits on null/undefined instead of throwing",
+          "null then undefined",
+          "undefined then TypeError"
+        ],
+        answer: 1,
+        explanation: "<code>?.</code> returns <b>undefined</b> (rather than throwing) when the left side is null or undefined. Both lines print undefined. Without it, <code>user.profile.email</code> would throw TypeError. Note it doesn't convert null to undefined generally — it short-circuits the property access."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>const data = { a: 1, b: undefined, c: () => 2 };\nconsole.log(JSON.stringify(data));</code></pre>",
+        choices: [
+          "{\"a\":1,\"b\":undefined,\"c\":\"() => 2\"}",
+          "{\"a\":1}",
+          "{\"a\":1,\"b\":null}",
+          "It throws an error"
+        ],
+        answer: 1,
+        explanation: "JSON has no representation for <code>undefined</code> or functions, so <code>JSON.stringify</code> <b>silently drops those properties</b> from objects → <code>{\"a\":1}</code>. (In arrays they'd become null instead.) A common source of data quietly disappearing across an API boundary."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does this print?",
+        context: "<pre><code>const { name: userName = \"Guest\" } = {};\nconsole.log(userName);</code></pre>",
+        choices: ["undefined", "\"Guest\"", "ReferenceError: name is not defined", "null"],
+        answer: 1,
+        explanation: "This destructures <code>name</code> from an empty object, <b>renames</b> it to <code>userName</code>, and applies the default <code>\"Guest\"</code> because the property is undefined. The combination rename + default (<code>name: userName = \"Guest\"</code>) trips up many readers."
+      },
+      {
+        type: "Predict the output",
+        prompt: "What does <code>console.log([1, 2, 3] + [4, 5])</code> print?",
+        choices: ["[1,2,3,4,5]", "\"1,2,34,5\"", "TypeError", "15"],
+        answer: 1,
+        explanation: "<code>+</code> isn't defined for arrays, so both coerce to strings: <code>\"1,2,3\"</code> and <code>\"4,5\"</code>, concatenated → <b>\"1,2,34,5\"</b>. To actually combine arrays use <code>[...a, ...b]</code> or <code>a.concat(b)</code>."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does an <code>async</code> function always return?",
+        choices: [
+          "Whatever value the return statement specifies, unchanged.",
+          "A Promise — return values are wrapped, and thrown errors become rejections.",
+          "undefined, unless you use .then().",
+          "A generator object."
+        ],
+        answer: 1,
+        explanation: "An <code>async</code> function <b>always returns a Promise</b>: <code>return 5</code> resolves to 5, and a thrown error becomes a rejected promise. That's why callers must <code>await</code> it or use <code>.then()</code> — logging the call directly shows <code>Promise { ... }</code>."
+      },
+      {
+        type: "Find the bug",
+        prompt: "This 'copy' still lets edits leak into the original. Why?",
+        context: "<pre><code>const original = { name: \"Ada\", address: { city: \"London\" } };\nconst copy = { ...original };\ncopy.address.city = \"Paris\";\nconsole.log(original.address.city); // \"Paris\" ?!</code></pre>",
+        choices: [
+          "Spread syntax doesn't copy anything; copy IS original.",
+          "Spread makes a shallow copy — nested objects are still shared references.",
+          "Object properties can't be copied in JS.",
+          "The const keyword links the two objects."
+        ],
+        answer: 1,
+        explanation: "<code>{ ...original }</code> copies only the <b>top level</b>; <code>copy.address</code> and <code>original.address</code> point to the same nested object. For deep copies use <code>structuredClone(original)</code> (modern) or rebuild nested levels explicitly."
+      },
+      {
+        type: "Core concept",
+        prompt: "A search box fires an API call on every keystroke. You want to wait until the user STOPS typing for 300ms before calling. Which technique?",
+        choices: [
+          "Throttle — run at most once per interval.",
+          "Debounce — delay execution until input pauses for the specified time.",
+          "setInterval polling.",
+          "Promise.all batching."
+        ],
+        answer: 1,
+        explanation: "<b>Debounce</b> resets a timer on each event and fires only after the pause — exactly the 'wait until they stop typing' behavior. <b>Throttle</b> is the sibling: it guarantees at most one execution per interval while events keep firing (better for scroll handlers). Knowing which fits which scenario is a standard screening question."
+      },
+      {
+        type: "Best practice",
+        prompt: "What's the correct way to check that a value is an array?",
+        choices: [
+          "typeof value === \"array\"",
+          "Array.isArray(value)",
+          "value instanceof Object",
+          "value.length !== undefined"
+        ],
+        answer: 1,
+        explanation: "<code>Array.isArray()</code> is the reliable check. <code>typeof []</code> returns <b>\"object\"</b> (there is no \"array\" type string), <code>instanceof Object</code> matches nearly everything, and strings/arguments objects also have <code>.length</code>."
+      }
+    ]
+  },
+
+  /* ================= TYPESCRIPT SKILLS ================= */
+  typescript: {
+    name: "TypeScript Skills Verification",
+    icon: "🔷",
+    desc: "Type-system fluency: narrowing, generics, utility types, and what TS does (and doesn't do) at runtime.",
+    items: [
+      {
+        type: "Core concept",
+        prompt: "What's the key difference between <code>any</code> and <code>unknown</code>?",
+        choices: [
+          "They're identical escape hatches.",
+          "any disables type checking entirely; unknown is type-safe — you must narrow it before using it.",
+          "unknown disables checking; any requires narrowing.",
+          "any is for objects, unknown is for primitives."
+        ],
+        answer: 1,
+        explanation: "<code>any</code> opts out of the type system — you can call anything on it with no errors. <code>unknown</code> accepts any value but forbids operations until you <b>narrow</b> it (typeof check, instanceof, assertion). Prefer <code>unknown</code> for untrusted input like API responses."
+      },
+      {
+        type: "Predict the error",
+        prompt: "Does this compile?",
+        context: "<pre><code>let count: number = 5;\ncount = \"five\";</code></pre>",
+        choices: [
+          "Yes — JS allows reassignment.",
+          "No — Type 'string' is not assignable to type 'number'.",
+          "Yes, but with a warning.",
+          "No — let variables can't be reassigned."
+        ],
+        answer: 1,
+        explanation: "The annotation locks <code>count</code> to <code>number</code>, so assigning a string is a compile error: <em>Type 'string' is not assignable to type 'number'</em>. This is TypeScript's core value — catching type mismatches before the code runs."
+      },
+      {
+        type: "Core concept",
+        prompt: "In this interface, what does the <code>?</code> mean?",
+        context: "<pre><code>interface User {\n  name: string;\n  email?: string;\n}</code></pre>",
+        choices: [
+          "email is nullable but required.",
+          "email is optional — a User may omit it, and its type is string | undefined.",
+          "email must be validated at runtime.",
+          "email is read-only."
+        ],
+        answer: 1,
+        explanation: "<code>?</code> marks an <b>optional property</b>: <code>{ name: \"Ada\" }</code> is a valid User, and reading <code>user.email</code> has type <code>string | undefined</code> — so the compiler forces you to handle the missing case before treating it as a string."
+      },
+      {
+        type: "Narrowing",
+        prompt: "Why does this compile without errors?",
+        context: "<pre><code>function format(value: string | number) {\n  if (typeof value === \"string\") {\n    return value.toUpperCase();\n  }\n  return value.toFixed(2);\n}</code></pre>",
+        choices: [
+          "TypeScript ignores union types inside functions.",
+          "The typeof check narrows the union: value is string in the if-branch and number after it.",
+          "toUpperCase and toFixed exist on both types.",
+          "It doesn't compile — unions can't be used like this."
+        ],
+        answer: 1,
+        explanation: "This is <b>type narrowing</b> via a type guard: inside <code>typeof value === \"string\"</code> the compiler knows value is a string; in the remaining code path it must be number. Control-flow narrowing is the idiomatic way to work with unions."
+      },
+      {
+        type: "Core concept",
+        prompt: "What problem do generics solve in this function?",
+        context: "<pre><code>function first&lt;T&gt;(items: T[]): T | undefined {\n  return items[0];\n}</code></pre>",
+        choices: [
+          "They make the function run faster.",
+          "They preserve the element type: first([1,2]) returns number | undefined instead of any.",
+          "They allow the function to accept more arguments.",
+          "They convert the array to a tuple."
+        ],
+        answer: 1,
+        explanation: "Generics keep the <b>relationship</b> between input and output types: <code>first([\"a\"])</code> is <code>string | undefined</code>, <code>first([1])</code> is <code>number | undefined</code>. Without <code>&lt;T&gt;</code> you'd have to choose between duplicating the function per type or losing safety with <code>any</code>."
+      },
+      {
+        type: "Predict the error",
+        prompt: "What happens here?",
+        context: "<pre><code>interface Config { readonly apiUrl: string; }\nconst cfg: Config = { apiUrl: \"https://api.example.com\" };\ncfg.apiUrl = \"https://evil.example.com\";</code></pre>",
+        choices: [
+          "Compiles and runs — readonly is just documentation.",
+          "Compile error: Cannot assign to 'apiUrl' because it is a read-only property.",
+          "Runtime error when the assignment executes.",
+          "The assignment is silently ignored."
+        ],
+        answer: 1,
+        explanation: "<code>readonly</code> makes reassignment a <b>compile-time</b> error. Note the limit: it's erased at runtime, so plain JS calling this code could still mutate it — readonly is a compiler guarantee, not a runtime lock."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does a type assertion like <code>value as User</code> actually do?",
+        choices: [
+          "Converts the value to a User object at runtime.",
+          "Only tells the compiler to treat it as User — no runtime check or conversion happens at all.",
+          "Validates the value's shape and throws if it doesn't match.",
+          "Creates a copy typed as User."
+        ],
+        answer: 1,
+        explanation: "<code>as</code> is purely a <b>compile-time claim</b> — it changes what the checker believes, and is completely erased from the emitted JS. If the value isn't actually a User, nothing catches it until something breaks later. For real validation you need runtime checks (or a library like zod)."
+      },
+      {
+        type: "Predict the error",
+        prompt: "With <code>strictNullChecks</code> on, why does this fail to compile?",
+        context: "<pre><code>function greet(name?: string) {\n  return name.toUpperCase();\n}</code></pre>",
+        choices: [
+          "toUpperCase doesn't exist on strings.",
+          "name is possibly undefined — you must check (or default) before calling methods on it.",
+          "Optional parameters can't be used in the function body.",
+          "It compiles fine."
+        ],
+        answer: 1,
+        explanation: "<code>name?</code> means <code>string | undefined</code>, and calling a method on possibly-undefined is an error: <em>'name' is possibly 'undefined'</em>. Fix with a guard (<code>if (!name) return ...</code>), a default (<code>name = \"friend\"</code>), or optional chaining. This null-safety is one of TS's biggest practical wins."
+      },
+      {
+        type: "Core concept",
+        prompt: "When does the <code>never</code> type appear, and what's it useful for?",
+        choices: [
+          "It's an alias for undefined.",
+          "It represents values that can't occur — e.g. a function that always throws, or the leftover of an exhausted union, enabling exhaustiveness checks.",
+          "It marks deprecated APIs.",
+          "It's the return type of async functions."
+        ],
+        answer: 1,
+        explanation: "<code>never</code> is the impossible type: functions that always throw return it, and after narrowing every member of a union, what remains is never. The classic use is an exhaustiveness check in a switch — assigning the default-case value to <code>never</code> makes the compiler flag any union member you forgot to handle."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between these two?",
+        context: "<pre><code>const pair: [string, number] = [\"age\", 30];\nconst list: (string | number)[] = [\"age\", 30];</code></pre>",
+        choices: [
+          "No difference.",
+          "pair is a tuple — fixed length with a specific type per position; list is any-length with mixed elements anywhere.",
+          "Tuples are immutable arrays.",
+          "list is invalid syntax."
+        ],
+        answer: 1,
+        explanation: "A <b>tuple</b> fixes both length and per-position types: <code>pair[0]</code> is exactly string, <code>pair[1]</code> exactly number, and <code>[30, \"age\"]</code> would error. The union array accepts either type at any index and any length. Tuples model 'a pair of specific things', arrays model collections."
+      },
+      {
+        type: "Utility types",
+        prompt: "What does <code>Partial&lt;User&gt;</code> produce?",
+        choices: [
+          "A User with only half its properties.",
+          "A type where every property of User is optional — handy for update/patch payloads.",
+          "A deep-cloned User type.",
+          "A User missing its methods."
+        ],
+        answer: 1,
+        explanation: "<code>Partial&lt;T&gt;</code> maps every property to optional: <code>{ name?: string; email?: string }</code>. Typical use: <code>function updateUser(id: string, changes: Partial&lt;User&gt;)</code> — callers pass only the fields they're changing. Its inverse is <code>Required&lt;T&gt;</code>."
+      },
+      {
+        type: "Utility types",
+        prompt: "You want a User type without its <code>password</code> field for sending to the client. Which is idiomatic?",
+        choices: [
+          "type SafeUser = Omit&lt;User, \"password\"&gt;",
+          "type SafeUser = Partial&lt;User&gt;",
+          "type SafeUser = Pick&lt;User, \"password\"&gt;",
+          "Delete the field at runtime; the type fixes itself."
+        ],
+        answer: 0,
+        explanation: "<code>Omit&lt;T, K&gt;</code> removes the named keys — exactly this use case. <code>Pick</code> is the mirror (keep only the named keys, so Pick&lt;User,\"password\"&gt; keeps ONLY the password — the opposite). And types never change runtime data: you must also actually strip the field in code."
+      },
+      {
+        type: "Narrowing",
+        prompt: "How does TypeScript know <code>shape.radius</code> is safe in the first branch?",
+        context: "<pre><code>type Shape =\n  | { kind: \"circle\"; radius: number }\n  | { kind: \"square\"; size: number };\n\nfunction area(shape: Shape) {\n  if (shape.kind === \"circle\") return Math.PI * shape.radius ** 2;\n  return shape.size ** 2;\n}</code></pre>",
+        choices: [
+          "It doesn't — this needs a cast.",
+          "This is a discriminated union: checking the literal 'kind' property narrows the union to the matching member.",
+          "radius exists on both members.",
+          "Math.PI forces numeric narrowing."
+        ],
+        answer: 1,
+        explanation: "The shared literal property <code>kind</code> is the <b>discriminant</b>: comparing it to \"circle\" tells the compiler which union member you're in, unlocking that member's fields. Discriminated unions + narrowing is the canonical TS pattern for modeling variants."
+      },
+      {
+        type: "Core concept",
+        prompt: "Your API returns JSON you've typed as <code>User</code>. At runtime the server sends a malformed object. What does TypeScript do?",
+        choices: [
+          "Throws a TypeError when the bad data arrives.",
+          "Nothing — types are fully erased at compile time; runtime data is never checked by TS itself.",
+          "Logs a console warning.",
+          "Coerces the data to match the type."
+        ],
+        answer: 1,
+        explanation: "TypeScript's types <b>don't exist at runtime</b> — they compile away entirely. Typing a fetch response as User is a promise you make, not one TS enforces. For untrusted boundaries, add runtime validation (schema libraries like zod, or manual guards). This misconception is heavily tested."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>interface</code> and <code>type</code> for object shapes?",
+        choices: [
+          "interface is deprecated in favor of type.",
+          "Both describe object shapes; interfaces support declaration merging and extends, while type aliases also handle unions, intersections, and primitives.",
+          "type runs faster at runtime.",
+          "Interfaces are checked at runtime; types are not."
+        ],
+        answer: 1,
+        explanation: "For plain object shapes they're near-interchangeable. Differences: interfaces can <b>merge</b> (two declarations with the same name combine — useful for augmenting libraries) and use extends; type aliases can express things interfaces can't (unions like <code>A | B</code>, mapped/conditional types, primitive aliases). Neither exists at runtime."
+      },
+      {
+        type: "Predict the error",
+        prompt: "Why does this signature fail to compile?",
+        context: "<pre><code>function greet(greeting?: string, name: string) {\n  return greeting + \" \" + name;\n}</code></pre>",
+        choices: [
+          "Functions can't have two string parameters.",
+          "A required parameter cannot follow an optional one.",
+          "greeting must have a default value instead.",
+          "It compiles fine."
+        ],
+        answer: 1,
+        explanation: "<em>A required parameter cannot follow an optional parameter.</em> Since arguments are positional, an optional-then-required order would be ambiguous. Fix: reorder (<code>name, greeting?</code>) or give the first a default. (A defaulted parameter <code>greeting = \"Hi\"</code> before a required one compiles, but callers must pass undefined explicitly — reordering is cleaner.)"
+      },
+      {
+        type: "Best practice",
+        prompt: "You need a value restricted to exactly \"small\", \"medium\", or \"large\". Which is the most idiomatic modern TS?",
+        choices: [
+          "type Size = \"small\" | \"medium\" | \"large\"  (a literal union)",
+          "let size: string with a comment listing the options",
+          "class Size with three static instances",
+          "type Size = any"
+        ],
+        answer: 0,
+        explanation: "A <b>literal union type</b> gives compile-time enforcement and editor autocomplete with zero runtime cost. A commented string enforces nothing; a class is heavyweight for three constants. (Enums also work, but literal unions are the lighter, more idiomatic choice in modern codebases.)"
+      },
+      {
+        type: "Predict the error",
+        prompt: "What happens at the marked line?",
+        context: "<pre><code>function handle(data: unknown) {\n  console.log(data.length);   // &lt;-- here\n}</code></pre>",
+        choices: [
+          "Prints the length if data has one.",
+          "Compile error: 'data' is of type 'unknown' — you must narrow it first (e.g. typeof data === \"string\").",
+          "Runtime error only.",
+          "Compiles because length exists on most values."
+        ],
+        answer: 1,
+        explanation: "<code>unknown</code> forbids every operation until narrowed. The fix is a guard: <code>if (typeof data === \"string\") console.log(data.length)</code>. This is exactly how unknown improves on any — the same code with <code>any</code> compiles silently and can crash at runtime."
+      },
+      {
+        type: "Core concept",
+        prompt: "Are <code>string[]</code> and <code>Array&lt;string&gt;</code> different types?",
+        choices: [
+          "Yes — string[] is fixed-length.",
+          "No — they're identical; [] is shorthand syntax for the generic Array type.",
+          "Yes — Array<string> allows null elements.",
+          "Yes — string[] is read-only."
+        ],
+        answer: 1,
+        explanation: "They're two spellings of the <b>same type</b>. <code>T[]</code> is sugar for <code>Array&lt;T&gt;</code>. Teams pick one for style; the generic form is sometimes clearer for complex element types like <code>Array&lt;{ id: number }&gt;</code>."
+      },
+      {
+        type: "Utility types",
+        prompt: "What type does this produce?",
+        context: "<pre><code>interface User { id: number; name: string; email: string; }\ntype Preview = Pick&lt;User, \"id\" | \"name\"&gt;;</code></pre>",
+        choices: [
+          "{ id: number; name: string }",
+          "{ email: string }",
+          "{ id?: number; name?: string }",
+          "A compile error — Pick takes one key only."
+        ],
+        answer: 0,
+        explanation: "<code>Pick&lt;T, K&gt;</code> keeps only the listed keys with their original types (still required): <code>{ id: number; name: string }</code>. Pick selects what to keep; <code>Omit</code> selects what to drop — the two are complements."
+      }
+    ]
+  },
+
+  /* ================= REACT SKILLS ================= */
+  react: {
+    name: "React Skills Verification",
+    icon: "⚛️",
+    desc: "Component and hooks fluency: state updates, effects, keys, controlled inputs, and re-render behavior.",
+    items: [
+      {
+        type: "Core concept",
+        prompt: "What is JSX?",
+        choices: [
+          "A templating language that runs in the browser directly.",
+          "Syntax sugar that compiles to React.createElement calls — JavaScript expressions describing UI.",
+          "A CSS-in-JS library.",
+          "React's built-in state manager."
+        ],
+        answer: 1,
+        explanation: "JSX compiles (via Babel/TS) to plain function calls that create element objects — it's JavaScript, not HTML. That's why you can embed expressions in <code>{ }</code>, why attributes use camelCase (<code>className</code>, <code>onClick</code>), and why browsers can't run it untranspiled."
+      },
+      {
+        type: "Core concept",
+        prompt: "A child component tries to modify a prop it received: <code>props.count = 5</code>. What's the React rule here?",
+        choices: [
+          "Fine — props are shared mutable state.",
+          "Props are read-only; data flows down, and changes must happen via the owner's state (often through a callback prop).",
+          "Allowed only in class components.",
+          "Allowed if wrapped in useEffect."
+        ],
+        answer: 1,
+        explanation: "React's one-way data flow: a component <b>never mutates its props</b>. If a child needs to change data, the parent that owns the state passes down a callback (e.g. <code>onIncrement</code>) for the child to invoke. Mutating props breaks predictability and won't trigger re-renders."
+      },
+      {
+        type: "Predict the output",
+        prompt: "After one click, what is <code>count</code>?",
+        context: "<pre><code>const [count, setCount] = useState(0);\n\nfunction handleClick() {\n  setCount(count + 1);\n  setCount(count + 1);\n  setCount(count + 1);\n}</code></pre>",
+        choices: ["3", "1", "0", "2"],
+        answer: 1,
+        explanation: "All three calls read the <b>same stale closure value</b> (count = 0), so each sets it to 1 — final result <b>1</b>, not 3. State updates are batched and <code>count</code> doesn't change mid-handler. This is the single most-asked React hooks question."
+      },
+      {
+        type: "Best practice",
+        prompt: "How do you fix the previous handler so one click adds 3?",
+        choices: [
+          "Call setCount three times in separate setTimeout calls.",
+          "Use functional updates: setCount(c => c + 1) three times — each receives the latest value.",
+          "Use var instead of const for count.",
+          "Add count to a dependency array."
+        ],
+        answer: 1,
+        explanation: "The functional form <code>setCount(c =&gt; c + 1)</code> receives the <b>pending latest state</b>, so three calls chain 0→1→2→3. Rule of thumb: whenever the next state depends on the previous state, use the updater function."
+      },
+      {
+        type: "Core concept",
+        prompt: "When does this effect run?",
+        context: "<pre><code>useEffect(() => {\n  fetchUsers();\n}, []);</code></pre>",
+        choices: [
+          "On every render.",
+          "Once after the initial mount (the empty dependency array means no re-runs).",
+          "Only when fetchUsers changes.",
+          "Before the component renders."
+        ],
+        answer: 1,
+        explanation: "An empty dependency array <code>[]</code> means the effect runs once after the first render (mount) and never again. No array = every render; <code>[dep]</code> = mount + whenever dep changes. Effects always run <em>after</em> paint, not before. (In dev StrictMode it mounts twice to surface bugs — not the case in production.)"
+      },
+      {
+        type: "Core concept",
+        prompt: "What is the returned function for?",
+        context: "<pre><code>useEffect(() => {\n  const id = setInterval(tick, 1000);\n  return () => clearInterval(id);\n}, []);</code></pre>",
+        choices: [
+          "It's the effect's return value passed to the parent.",
+          "A cleanup function — React calls it before the effect re-runs and when the component unmounts, preventing leaks.",
+          "It restarts the interval.",
+          "It's required syntax with no behavior."
+        ],
+        answer: 1,
+        explanation: "Returning a function from an effect registers <b>cleanup</b>: React invokes it on unmount (and before every re-run of the effect). Here it stops the interval so unmounted components don't keep ticking — forgetting cleanup is the classic source of memory leaks and 'setState on unmounted component' warnings."
+      },
+      {
+        type: "Judgment",
+        prompt: "Why is using the array index as a list key risky?",
+        context: "<pre><code>{todos.map((todo, i) => &lt;TodoItem key={i} todo={todo} /&gt;)}</code></pre>",
+        choices: [
+          "Index keys are slower to compute.",
+          "If items are reordered, inserted, or deleted, indexes shift — React matches old state/DOM to the wrong items, causing subtle bugs.",
+          "React forbids numeric keys.",
+          "It's never risky; keys are only for warnings."
+        ],
+        answer: 1,
+        explanation: "Keys are React's <b>identity</b> for list items across renders. With index keys, deleting the first todo makes every remaining item's key shift by one, so component state (like a checked checkbox or input text) sticks to the wrong row. Use a stable unique id. Index is acceptable only for static, never-reordered lists."
+      },
+      {
+        type: "Core concept",
+        prompt: "What makes this input 'controlled'?",
+        context: "<pre><code>&lt;input value={name} onChange={e =&gt; setName(e.target.value)} /&gt;</code></pre>",
+        choices: [
+          "It has a maxLength attribute.",
+          "React state is the single source of truth: the displayed value comes from state, and every keystroke updates state.",
+          "The browser validates it automatically.",
+          "It can't be edited by the user."
+        ],
+        answer: 1,
+        explanation: "A <b>controlled</b> input renders whatever state says (<code>value={name}</code>) and routes user edits through <code>onChange</code> → setState → re-render. This makes validation, formatting, and resets trivial. The alternative — uncontrolled with a ref reading <code>defaultValue</code> — leaves the DOM as the source of truth."
+      },
+      {
+        type: "Judgment",
+        prompt: "Two sibling components need to share the same piece of state. What's the standard React solution?",
+        choices: [
+          "Have each keep its own copy and sync with effects.",
+          "Lift the state up to their closest common parent and pass it down as props.",
+          "Store it on the window object.",
+          "Siblings can't share state in React."
+        ],
+        answer: 1,
+        explanation: "<b>Lifting state up</b>: move the state to the nearest common ancestor, pass the value and updater callbacks down. Duplicating state and syncing with effects creates drift and render loops — the most common architectural mistake reviewers look for. (Context/stores are for when lifting gets too deep.)"
+      },
+      {
+        type: "Find the bug",
+        prompt: "When <code>count</code> is 0, this renders a stray '0' on screen. Why?",
+        context: "<pre><code>{count && &lt;p&gt;You have {count} items&lt;/p&gt;}</code></pre>",
+        choices: [
+          "React always renders numbers.",
+          "0 is falsy, so && short-circuits and returns 0 itself — and React renders the number 0 as text.",
+          "The p tag is malformed.",
+          "count is a string."
+        ],
+        answer: 1,
+        explanation: "<code>a && b</code> evaluates to <code>a</code> when a is falsy — here the number <b>0</b>, which React happily renders (unlike false/null/undefined, which render nothing). Fix: <code>{count &gt; 0 && ...}</code> or a ternary. A tiny trap that ships to production constantly."
+      },
+      {
+        type: "Find the bug",
+        prompt: "Clicking 'Add' updates the data but the list never re-renders. Why?",
+        context: "<pre><code>const [items, setItems] = useState([]);\n\nfunction addItem(item) {\n  items.push(item);\n  setItems(items);\n}</code></pre>",
+        choices: [
+          "push is asynchronous.",
+          "The array was mutated in place — setItems receives the SAME reference, so React's Object.is comparison sees no change and skips the re-render.",
+          "useState can't hold arrays.",
+          "setItems needs a second argument."
+        ],
+        answer: 1,
+        explanation: "React decides 'did state change?' by <b>reference comparison</b>. Mutating and passing back the same array looks unchanged. Always produce a new reference: <code>setItems([...items, item])</code>. The same rule applies to objects — treat state as immutable."
+      },
+      {
+        type: "Core concept",
+        prompt: "Which of these violates the Rules of Hooks?",
+        choices: [
+          "Calling useState twice in one component.",
+          "Calling useEffect inside an if-statement.",
+          "Calling a custom hook from another custom hook.",
+          "Using useState in an arrow-function component."
+        ],
+        answer: 1,
+        explanation: "Hooks must be called <b>unconditionally at the top level</b>, in the same order every render — React tracks them by call order. A hook inside an if runs on some renders and not others, corrupting that order. Conditions go <em>inside</em> the hook (<code>useEffect(() =&gt; { if (ready) ... })</code>), never around it."
+      },
+      {
+        type: "Find the bug",
+        prompt: "This alert fires immediately on render, not on click. Why?",
+        context: "<pre><code>&lt;button onClick={handleDelete()}&gt;Delete&lt;/button&gt;</code></pre>",
+        choices: [
+          "onClick is the wrong event name.",
+          "handleDelete() CALLS the function during render; you must pass the reference: onClick={handleDelete} or onClick={() => handleDelete(id)}.",
+          "Buttons need onPress in React.",
+          "The handler must be async."
+        ],
+        answer: 1,
+        explanation: "The parentheses invoke the function while rendering and pass its <em>return value</em> as the handler. Pass the function itself — <code>onClick={handleDelete}</code> — or wrap it when you need arguments: <code>onClick={() =&gt; handleDelete(id)}</code>. A top-3 beginner React bug."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the key difference between <code>useRef</code> and <code>useState</code>?",
+        choices: [
+          "useRef is for DOM elements only.",
+          "Updating a ref's .current does NOT trigger a re-render; setState does. Refs hold mutable values that persist across renders without affecting output.",
+          "useState persists across renders; useRef resets each render.",
+          "They're interchangeable."
+        ],
+        answer: 1,
+        explanation: "Both persist across renders, but only <b>state updates schedule a re-render</b>. Refs are for values the UI doesn't display — timer ids, previous values, DOM nodes. If changing the value should change what's on screen, it's state; otherwise a ref avoids pointless renders."
+      },
+      {
+        type: "Core concept",
+        prompt: "Which of these causes a React component to re-render?",
+        choices: [
+          "Changing a ref's .current value.",
+          "Its state changing, or its parent re-rendering (unless memoized).",
+          "A variable inside the component function changing.",
+          "Calling the component function manually."
+        ],
+        answer: 1,
+        explanation: "Re-renders come from <b>setState in the component</b> or the <b>parent re-rendering</b> (children re-render with parents unless wrapped in <code>React.memo</code>). Refs and local variables don't schedule renders; local variables are recreated fresh each render anyway."
+      },
+      {
+        type: "Core concept",
+        prompt: "Why use a Fragment (<code>&lt;&gt;...&lt;/&gt;</code>)?",
+        choices: [
+          "To improve performance of large lists.",
+          "To return multiple sibling elements without adding an extra wrapper node to the DOM.",
+          "To enable CSS scoping.",
+          "It's required around every component."
+        ],
+        answer: 1,
+        explanation: "A component must return one root element; a Fragment groups siblings <b>without emitting a wrapper div</b> — keeping the DOM clean, which matters for flex/grid layouts and tables where an extra div breaks styling or validity."
+      },
+      {
+        type: "Find the bug",
+        prompt: "This effect logs a stale count forever. What's wrong?",
+        context: "<pre><code>const [count, setCount] = useState(0);\n\nuseEffect(() => {\n  const id = setInterval(() => console.log(count), 1000);\n  return () => clearInterval(id);\n}, []);   // logs 0, 0, 0... even after count changes</code></pre>",
+        choices: [
+          "setInterval doesn't work inside effects.",
+          "The effect closed over the initial count and never re-ran — count is missing from the dependency array (a stale closure).",
+          "console.log caches its arguments.",
+          "clearInterval runs too early."
+        ],
+        answer: 1,
+        explanation: "With <code>[]</code>, the interval callback keeps the closure from the first render, where count was 0 — a <b>stale closure</b>. Fixes: add <code>count</code> to the deps (interval restarts on change), or use a ref for the latest value. The exhaustive-deps lint rule exists precisely to catch this."
+      },
+      {
+        type: "Judgment",
+        prompt: "A component stores <code>fullName</code> in state and updates it in an effect whenever <code>firstName</code> or <code>lastName</code> state changes. What's the better pattern?",
+        choices: [
+          "Keep the effect but add more dependencies.",
+          "Don't store derived data — compute it during render: const fullName = firstName + \" \" + lastName;",
+          "Move fullName to a ref.",
+          "Store all three in one state object and mutate it."
+        ],
+        answer: 1,
+        explanation: "If a value can be <b>computed from existing state/props, compute it in render</b> — no extra state, no effect, no risk of the copies drifting out of sync, one less render cycle. 'You might not need an effect' is official React guidance and a favorite code-review finding."
+      },
+      {
+        type: "Core concept",
+        prompt: "In a form's submit handler, why call <code>e.preventDefault()</code>?",
+        context: "<pre><code>function handleSubmit(e) {\n  e.preventDefault();\n  saveData(formState);\n}</code></pre>",
+        choices: [
+          "It stops React from batching state updates.",
+          "It stops the browser's default full-page reload on form submission so the SPA can handle it in JS.",
+          "It prevents child components from re-rendering.",
+          "It's only needed in class components."
+        ],
+        answer: 1,
+        explanation: "Native form submission navigates/reloads the page — wiping your app's state. <code>preventDefault()</code> cancels that so your handler submits via JS (fetch, state update) instead. Same idea as preventing an anchor's navigation."
+      },
+      {
+        type: "Judgment",
+        prompt: "Compare two AI answers to: <em>'Why is my list rendering wrong after sorting?'</em> Answer A: 'Add key={Math.random()} to silence the warning.' Answer B: 'Use a stable unique id as the key so React can track item identity across reorders.' Which is correct?",
+        choices: [
+          "A — random keys are unique, which is all that matters.",
+          "B — random keys change every render, forcing full remounts and losing state; keys must be stable AND unique.",
+          "Both work equally well.",
+          "Neither; keys are optional."
+        ],
+        answer: 1,
+        explanation: "<code>Math.random()</code> generates a <b>new key every render</b>, so React treats every item as brand new: components remount, inputs lose focus and state, performance tanks. It silences the warning while making everything worse. Keys must be <b>stable across renders</b> and unique among siblings — an id from the data."
+      }
+    ]
   }
 
 };

@@ -9,7 +9,7 @@ There are **two modes** on the home screen.
 
 ### 1. Knowledge assessments (multiple choice)
 
-Five tracks (20 questions each, 100 total) plus a randomized mixed exam:
+Eight tracks (20 questions each, 160 total) plus a randomized mixed exam:
 
 | Track | What it drills |
 |-------|----------------|
@@ -18,10 +18,15 @@ Five tracks (20 questions each, 100 total) plus a randomized mixed exam:
 | ⚖️ **Response Rating (RLHF)** | Compare answers on accuracy, helpfulness, safety, instruction-following |
 | 🔢 **Reasoning & STEM** | Arithmetic/unit checks, logic, probability, sanity-checking AI numbers |
 | 🌿 **Git Skills Verification** | Version-control fluency: staging, branching, undoing mistakes safely, shared-history judgment |
+| 🟨 **JavaScript Skills Verification** | Coercion, scope, closures, the event loop, async, and common traps |
+| 🔷 **TypeScript Skills Verification** | Narrowing, generics, utility types, and what TS does (and doesn't) at runtime |
+| ⚛️ **React Skills Verification** | State updates, effects, keys, controlled inputs, re-render behavior |
 
-Per-question timer (90s, optional), shuffle, instant explanations, keyboard
-shortcuts (`1`–`4` to pick, `Enter` to submit/advance), scored results with a
-full review and per-track breakdown.
+Before starting, pick the **number of questions per test (5 / 10 / 15 / 20)** —
+the app randomly samples that many from the track's bank, so retakes draw
+different questions. Per-question timer (90s, optional), shuffle, instant
+explanations, keyboard shortcuts (`1`–`4` to pick, `Enter` to submit/advance),
+scored results with a full review and per-track breakdown.
 
 ### 2. Realistic rating tasks (the actual platform work)
 

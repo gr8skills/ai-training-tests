@@ -74,6 +74,11 @@ h1 { font-size: 26px; margin: 4px 0 12px; }
 }
 .opt { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
 .opt input { width: 16px; height: 16px; accent-color: var(--accent); }
+.opt select {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); padding: 6px 10px; font-family: inherit; font-size: 14px; cursor: pointer;
+}
+.opt select:focus { outline: none; border-color: var(--accent); }
 
 /* track grid */
 .track-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
