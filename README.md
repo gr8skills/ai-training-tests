@@ -9,7 +9,7 @@ There are **two modes** on the home screen.
 
 ### 1. Knowledge assessments (multiple choice)
 
-Four tracks (20 questions each, 80 total) plus a randomized mixed exam:
+Five tracks (20 questions each, 100 total) plus a randomized mixed exam:
 
 | Track | What it drills |
 |-------|----------------|
@@ -17,6 +17,7 @@ Four tracks (20 questions each, 80 total) plus a randomized mixed exam:
 | 💻 **Coding Evaluation** | Find bugs, predict output, judge complexity, compare two AI code answers |
 | ⚖️ **Response Rating (RLHF)** | Compare answers on accuracy, helpfulness, safety, instruction-following |
 | 🔢 **Reasoning & STEM** | Arithmetic/unit checks, logic, probability, sanity-checking AI numbers |
+| 🌿 **Git Skills Verification** | Version-control fluency: staging, branching, undoing mistakes safely, shared-history judgment |
 
 Per-question timer (90s, optional), shuffle, instant explanations, keyboard
 shortcuts (`1`–`4` to pick, `Enter` to submit/advance), scored results with a

@@ -991,6 +991,256 @@ const QUESTIONS = {
         explanation: "24 hours × 60 min × 60 sec = 86,400 seconds. The AI's 31,000 is way off. (3,600 is seconds in an hour; 1,440 is minutes in a day — both are plausible-looking distractors.) Sanity-checking time/quantity conversions is a core reviewing skill."
       }
     ]
+  },
+
+  /* ================= GIT SKILLS ================= */
+  git: {
+    name: "Git Skills Verification",
+    icon: "🌿",
+    desc: "Version-control fluency: commands, branching, undoing mistakes, and judging AI answers about git.",
+    items: [
+      {
+        type: "Core concept",
+        prompt: "What is the difference between <code>git add</code> and <code>git commit</code>?",
+        choices: [
+          "git add saves changes permanently; git commit uploads them to GitHub.",
+          "git add stages changes for the next commit; git commit records the staged snapshot in history.",
+          "They are interchangeable — both save your work.",
+          "git add creates a branch; git commit merges it."
+        ],
+        answer: 1,
+        explanation: "Git has a two-step flow: <code>git add</code> moves changes into the <b>staging area</b> (choosing what goes in the next commit), and <code>git commit</code> permanently records that staged snapshot in the repository history. Neither touches GitHub — that's <code>git push</code>."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does <code>git pull</code> actually do?",
+        choices: [
+          "Downloads remote changes without applying them.",
+          "Uploads your local commits to the remote.",
+          "Runs git fetch (download remote changes) followed by git merge (integrate them).",
+          "Deletes your local changes and replaces them with the remote version."
+        ],
+        answer: 2,
+        explanation: "<code>git pull</code> = <code>git fetch</code> + <code>git merge</code> (or rebase, if configured). Fetch alone just downloads; pull also integrates into your current branch. It does not discard local work (that would be <code>reset --hard</code>) and it's the opposite direction of <code>push</code>."
+      },
+      {
+        type: "Scenario",
+        prompt: "You committed too early and want to <b>undo the last commit but keep all the changes</b> in your working directory. Which command?",
+        choices: [
+          "git reset --hard HEAD~1",
+          "git reset --soft HEAD~1",
+          "git revert HEAD --no-edit",
+          "git checkout HEAD~1"
+        ],
+        answer: 1,
+        explanation: "<code>git reset --soft HEAD~1</code> moves the branch back one commit while keeping your changes staged. <code>--hard</code> would <b>destroy</b> the changes — the classic dangerous mistake. <code>revert</code> creates a new inverse commit (history keeps both), and <code>checkout HEAD~1</code> detaches HEAD instead of undoing."
+      },
+      {
+        type: "Command usage",
+        prompt: "Which command creates a new branch AND switches to it in one step?",
+        choices: [
+          "git branch new-feature",
+          "git checkout -b new-feature",
+          "git merge new-feature",
+          "git switch new-feature"
+        ],
+        answer: 1,
+        explanation: "<code>git checkout -b new-feature</code> (or the modern <code>git switch -c new-feature</code>) creates and switches in one step. Plain <code>git branch</code> only creates without switching; plain <code>git switch</code> (no <code>-c</code>) only switches to an existing branch; <code>merge</code> combines branches."
+      },
+      {
+        type: "Scenario",
+        prompt: "You open a file and see this. What is it?",
+        context: "<pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD\nconst rate = 0.15;\n=======\nconst rate = 0.18;\n&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/new-rates</code></pre>",
+        choices: [
+          "A syntax error introduced by git.",
+          "Merge conflict markers — your branch and the incoming branch changed the same lines.",
+          "A git stash that wasn't applied.",
+          "Corrupted file encoding."
+        ],
+        answer: 1,
+        explanation: "These are <b>conflict markers</b>: the code between <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code> and <code>=======</code> is your current branch's version; between <code>=======</code> and <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> is the incoming branch's. You resolve by editing to the correct final code, removing all three marker lines, then <code>git add</code> + commit."
+      },
+      {
+        type: "Command usage",
+        prompt: "You need to switch branches urgently but have half-finished, uncommitted changes you don't want to commit yet. Best tool?",
+        choices: [
+          "git stash — shelve the changes, switch, then git stash pop later.",
+          "git reset --hard — clear the changes.",
+          "Copy the files to your desktop manually.",
+          "git commit -m 'WIP' directly on the wrong branch."
+        ],
+        answer: 0,
+        explanation: "<code>git stash</code> is built exactly for this: it shelves uncommitted changes so you get a clean tree, and <code>git stash pop</code> restores them later. <code>reset --hard</code> destroys the work; manual copies are error-prone; committing WIP to the wrong branch pollutes history (though it's at least recoverable)."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does it mean when git says you are in a <b>detached HEAD</b> state?",
+        choices: [
+          "Your repository is corrupted and needs re-cloning.",
+          "HEAD points directly at a specific commit rather than a branch, so new commits won't belong to any branch.",
+          "Your local branch has diverged from the remote.",
+          "You deleted the branch you were on."
+        ],
+        answer: 1,
+        explanation: "Detached HEAD happens when you check out a commit (or tag) directly instead of a branch. It's not an error — but commits you make there aren't on any branch and can be lost once you switch away. The fix if you want to keep work: <code>git switch -c new-branch</code> to attach a branch to where you are."
+      },
+      {
+        type: "Judgment",
+        prompt: "Your teammate already pulled the branch you both work on. You want to undo a bad commit that's already <b>pushed and shared</b>. Which is the safer choice, and why?",
+        choices: [
+          "git reset --hard then force-push — cleanest history.",
+          "git revert — it adds a new commit that undoes the bad one without rewriting shared history.",
+          "Delete the branch and recreate it.",
+          "Edit the old commit with git commit --amend and force-push."
+        ],
+        answer: 1,
+        explanation: "<b>Never rewrite shared history.</b> Reset/amend + force-push rewrites commits your teammate already has, breaking their local repo state. <code>git revert</code> creates a new commit that inverses the bad one — history stays append-only and everyone stays in sync. Reset is fine only for commits that were never shared."
+      },
+      {
+        type: "Scenario",
+        prompt: "You added <code>secrets.env</code> to <code>.gitignore</code>, but git still tracks and shows changes to it. Why?",
+        choices: [
+          ".gitignore only works for binary files.",
+          "The file was already tracked before being ignored — .gitignore only prevents tracking NEW files. You must git rm --cached it first.",
+          "You must restart git for .gitignore to take effect.",
+          ".gitignore must be in your home directory."
+        ],
+        answer: 1,
+        explanation: "<code>.gitignore</code> only stops <em>untracked</em> files from being added. A file already in the index keeps being tracked regardless. Fix: <code>git rm --cached secrets.env</code> (removes from tracking but keeps the file on disk), commit, and then the ignore rule applies. Bonus concern: if secrets were pushed, rotate them — they're in history."
+      },
+      {
+        type: "Predict the outcome",
+        prompt: "Your push fails with: <code>! [rejected] main -> main (non-fast-forward)</code>. What happened and what's the normal fix?",
+        choices: [
+          "The remote is down; try again later.",
+          "Someone else pushed commits you don't have yet — pull (fetch+merge/rebase) first, then push.",
+          "Your commit message was rejected by a hook.",
+          "You must always use git push --force in this situation."
+        ],
+        answer: 1,
+        explanation: "Non-fast-forward means the remote has commits your local branch lacks. The standard flow is <code>git pull</code> (integrating their work, resolving conflicts if any) and then <code>git push</code>. Reaching for <code>--force</code> here would overwrite your teammates' commits — the exact behavior the rejection exists to prevent."
+      },
+      {
+        type: "Command usage",
+        prompt: "Which command shows the difference between your <b>staged</b> changes and the last commit?",
+        choices: [
+          "git diff",
+          "git diff --staged",
+          "git status",
+          "git log -p"
+        ],
+        answer: 1,
+        explanation: "<code>git diff --staged</code> (alias <code>--cached</code>) compares the staging area against HEAD — what would go into the next commit. Plain <code>git diff</code> shows <em>unstaged</em> changes (working tree vs index). <code>status</code> lists file states without content diffs; <code>log -p</code> shows past commits' patches."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the key difference between <code>git rebase</code> and <code>git merge</code> when integrating main into your feature branch?",
+        choices: [
+          "Rebase replays your commits on top of main for a linear history; merge creates a merge commit joining both histories.",
+          "Rebase is for remote branches; merge is for local ones.",
+          "Merge deletes the feature branch; rebase keeps it.",
+          "There is no difference; they're aliases."
+        ],
+        answer: 0,
+        explanation: "Both integrate changes, but differently: <b>merge</b> ties the two histories together with a merge commit (non-destructive, preserves true chronology); <b>rebase</b> rewrites your commits as if you started from the latest main (linear, cleaner, but rewrites history — so don't rebase commits others already have)."
+      },
+      {
+        type: "Command usage",
+        prompt: "You made a typo in your <b>last</b> commit message (not yet pushed). How do you fix just the message?",
+        choices: [
+          "git commit --amend -m \"Corrected message\"",
+          "git revert HEAD",
+          "git reset --hard HEAD~1 and redo everything",
+          "You can't change a commit message."
+        ],
+        answer: 0,
+        explanation: "<code>git commit --amend</code> replaces the last commit (here, only its message). Safe because it isn't pushed yet — amending a pushed commit rewrites shared history. <code>revert</code> adds an inverse commit (overkill), and <code>reset --hard</code> throws away work unnecessarily."
+      },
+      {
+        type: "Judgment",
+        prompt: "What's the difference between <code>git branch -d</code> and <code>git branch -D</code>?",
+        choices: [
+          "-d deletes local branches, -D deletes remote branches.",
+          "-d refuses to delete a branch with unmerged commits; -D force-deletes regardless.",
+          "-D is just the interactive version of -d.",
+          "They're identical."
+        ],
+        answer: 1,
+        explanation: "<code>-d</code> is the safe delete: git refuses if the branch has commits not merged anywhere, protecting you from losing work. <code>-D</code> forces deletion regardless. Reach for <code>-D</code> only when you're sure the work is abandoned or preserved elsewhere. Remote branch deletion is different: <code>git push origin --delete branch</code>."
+      },
+      {
+        type: "Predict the outcome",
+        prompt: "You run <code>git fetch origin</code>. What changes in your working directory?",
+        choices: [
+          "Your files update to match the remote.",
+          "Nothing — fetch downloads remote refs/objects but touches neither your branches nor your files.",
+          "Local commits are uploaded.",
+          "Untracked files are deleted."
+        ],
+        answer: 1,
+        explanation: "<code>fetch</code> is the safe, read-only sync: it updates your remote-tracking refs (like <code>origin/main</code>) so you can inspect what's new (<code>git log main..origin/main</code>), but your local branches and working files are untouched until you merge/rebase. That's exactly why fetch-then-review is safer than blind pulling."
+      },
+      {
+        type: "Scenario",
+        prompt: "You want to commit only SOME of the edits in a file, not all of them. Which command enables that?",
+        choices: [
+          "git add -p (interactively stage individual hunks)",
+          "git commit -a",
+          "git add . --partial",
+          "Impossible — git only stages whole files."
+        ],
+        answer: 0,
+        explanation: "<code>git add -p</code> (patch mode) walks through each hunk of changes and lets you stage or skip it — perfect for splitting one working session into clean, focused commits. <code>commit -a</code> does the opposite (stages everything tracked); <code>--partial</code> doesn't exist. Staging is per-hunk capable, not just per-file."
+      },
+      {
+        type: "Core concept",
+        prompt: "In <code>git push origin main</code>, what exactly is <code>origin</code>?",
+        choices: [
+          "The name of the main branch.",
+          "A shorthand alias for the remote repository's URL, created by default when you clone.",
+          "The original author of the repository.",
+          "A protected system branch."
+        ],
+        answer: 1,
+        explanation: "<code>origin</code> is just the default <b>name for the remote</b> — an alias for the URL you cloned from (see <code>git remote -v</code>). It's convention, not magic: you can rename it or add more remotes (e.g. <code>upstream</code> for the original repo of a fork)."
+      },
+      {
+        type: "Predict the outcome",
+        prompt: "What does <code>HEAD~2</code> refer to?",
+        choices: [
+          "The 2nd branch in the repository.",
+          "The commit two steps before the current one (grandparent of HEAD).",
+          "Two commits in the future.",
+          "The 2nd file changed in the last commit."
+        ],
+        answer: 1,
+        explanation: "<code>HEAD</code> is your current commit; <code>~n</code> walks back n first-parent steps. So <code>HEAD~2</code> is the grandparent commit. (Related: <code>HEAD^</code> equals <code>HEAD~1</code>; they differ only around merge commits, where <code>^2</code> selects the second parent.)"
+      },
+      {
+        type: "Judgment",
+        prompt: "A teammate asks: \"Why write small, focused commits with clear messages instead of one giant 'changes' commit at the end of the day?\" Which answer is best?",
+        choices: [
+          "It doesn't matter; git works either way.",
+          "Small commits make review, reverting a single change, git bisect debugging, and understanding history far easier.",
+          "Because GitHub charges per commit size.",
+          "Big commits are actually better — fewer entries to read."
+        ],
+        answer: 1,
+        explanation: "Atomic commits are a core collaboration practice: reviewers can follow the reasoning, a bad change can be reverted alone without dragging unrelated work, <code>git bisect</code> can pinpoint which small change broke something, and <code>git blame</code>/history actually explain <em>why</em> code exists. Git tolerates giant commits; teams suffer them."
+      },
+      {
+        type: "Scenario",
+        prompt: "You accidentally committed to <code>main</code> instead of a feature branch (not pushed). What's the cleanest fix?",
+        choices: [
+          "Delete the repository and re-clone.",
+          "git branch feature (capture the commit), then git reset --hard HEAD~1 on main — the commit now lives only on feature.",
+          "git push --force immediately.",
+          "Nothing can be done; main is permanent."
+        ],
+        answer: 1,
+        explanation: "Create the branch first — <code>git branch feature</code> pins a label to the commit — then move main back with <code>git reset --hard HEAD~1</code>. The work is safe on <code>feature</code>, and main is clean. Order matters: resetting first would leave the commit unreferenced. Safe only because it wasn't pushed."
+      }
+    ]
   }
 
 };

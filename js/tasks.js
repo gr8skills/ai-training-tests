@@ -258,6 +258,34 @@ const TASKS = [
     ]
   },
 
+  {
+    domain: "Git / Version Control",
+    instructions: "A user asks a git question. Verify each response's commands yourself — one of them can destroy work. Score, choose a preference, and justify with specifics.",
+    prompt: "I committed too soon — I want to undo my last commit but KEEP all my changes so I can keep working on them. It's local only, not pushed. What do I run?",
+    responseA:
+      "Run:<pre><code>git reset --hard HEAD~1</code></pre>This will undo your last commit and reset everything so you can start fresh.",
+    responseB:
+      "Since it's local and unpushed, use a soft reset:<pre><code>git reset --soft HEAD~1</code></pre>This moves the branch back one commit while keeping all your changes staged, ready to keep editing or re-commit. (Careful with <code>--hard</code> here — it would discard your changes entirely.)",
+    dimensions: [
+      { key: "if", name: "Instruction Following (keep the changes)", expertA: 1, expertB: 5,
+        note: "The user's explicit requirement is to KEEP the changes. A's --hard reset discards them; B's --soft reset preserves them staged." },
+      { key: "truth", name: "Correctness / Safety of Commands", expertA: 1, expertB: 5,
+        note: "A's command is actively destructive for this request — uncommitted work is gone (the commit itself is recoverable via reflog, but that's beyond the user's stated knowledge). B is correct and even warns about the trap." },
+      { key: "harm", name: "Harmlessness", expertA: 2, expertB: 5,
+        note: "Data-destroying advice presented confidently is a real-world harm in a technical context, even though it's not a safety-policy issue." },
+      { key: "writing", name: "Clarity", expertA: 4, expertB: 5,
+        note: "Both are clear; A's clarity makes its wrong advice more dangerous, not better." }
+    ],
+    expertPref: 7,
+    expertRationale:
+      "B is much better. The user explicitly wants to keep their changes; B's <code>git reset --soft HEAD~1</code> does exactly that and adds a warning about the trap. A recommends <code>--hard</code>, which discards the very changes the user asked to keep — confident, fluent, and destructive. When one response is correct and the other causes data loss on the user's stated goal, the gap is maximal (7). This task also illustrates why raters must verify commands rather than trust a confident tone.",
+    checklist: [
+      "Did you verify what --hard vs --soft actually does before scoring?",
+      "Did you tie the failure to the explicit 'KEEP all my changes' requirement?",
+      "Did you note that A's fluency doesn't mitigate destructive advice?"
+    ]
+  },
+
   /* ===================== MULTI-TURN CONVERSATION TASKS ===================== */
   {
     domain: "Multi-turn · Context Retention",
