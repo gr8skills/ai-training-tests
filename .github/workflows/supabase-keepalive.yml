@@ -1,0 +1,28 @@
+name: Supabase keep-alive
+
+# Free-tier Supabase projects are paused after ~7 days of inactivity, which
+# breaks result saving ("[network]" errors in the app). This workflow pings
+# the REST API every 2 days so the project always registers recent activity.
+#
+# The publishable key below is safe to expose: the results table is
+# INSERT-only under RLS, and this request is a SELECT that returns no rows.
+
+on:
+  schedule:
+    - cron: "0 6 */2 * *" # every 2 days at 06:00 UTC
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            "https://tykfaithdicdpeppxkxw.supabase.co/rest/v1/results?select=id&limit=1" \
+            -H "apikey: sb_publishable_jwOhhFGUtjcV_HAhNwQIdg_b1-d46Bm" \
+            -H "Authorization: Bearer sb_publishable_jwOhhFGUtjcV_HAhNwQIdg_b1-d46Bm")
+          echo "Supabase responded with HTTP $code"
+          # 200 = healthy. Anything else (521 = paused, 000 = unreachable) fails
+          # the job so you get a GitHub notification email.
+          [ "$code" = "200" ]
