@@ -720,6 +720,13 @@
         $("#name-error").textContent = "";
       }
     });
+    // remember each person's preferred question quantity across sessions
+    const qtySel = $("#opt-qty");
+    const savedQty = localStorage.getItem("qtyPref");
+    if (savedQty && Array.from(qtySel.options).some((o) => o.value === savedQty)) {
+      qtySel.value = savedQty;
+    }
+    qtySel.addEventListener("change", () => localStorage.setItem("qtyPref", qtySel.value));
     $("#btn-mixed").addEventListener("click", () => startQuiz("mixed"));
     $("#btn-tasks").addEventListener("click", startTasks);
     $("#btn-next").addEventListener("click", onNext);

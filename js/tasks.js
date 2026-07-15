@@ -286,6 +286,90 @@ const TASKS = [
     ]
   },
 
+  {
+    domain: "JavaScript Debugging",
+    instructions: "A user reports a bug. Both responses offer a diagnosis and a fix. Verify each diagnosis yourself — a fix that works for the wrong reason still teaches the user something false.",
+    prompt: "My function returns undefined even though I clearly return an object. What's wrong?<pre><code>function getTotals() {\n  return\n    { total: 42, tax: 3 };\n}</code></pre>",
+    responseA:
+      "The problem is your object literal — JavaScript doesn't allow defining an object directly inside a return statement. Build it in a variable first:<pre><code>function getTotals() {\n  const result = { total: 42, tax: 3 };\n  return result;\n}</code></pre>",
+    responseB:
+      "This is <b>automatic semicolon insertion (ASI)</b>: a line break immediately after <code>return</code> makes JavaScript insert a semicolon there, so the function returns undefined and the object on the next line is never reached. Keep the opening brace on the same line:<pre><code>function getTotals() {\n  return { total: 42, tax: 3 };\n}</code></pre>",
+    dimensions: [
+      { key: "truth", name: "Correctness of Diagnosis", expertA: 2, expertB: 5,
+        note: "A's claimed rule is false — returning an object literal directly is perfectly legal. The real cause is ASI after the bare 'return'. B names the actual mechanism." },
+      { key: "helpful", name: "Fix Quality", expertA: 4, expertB: 5,
+        note: "A's workaround does fix the symptom (the assignment puts the literal on one line), but by accident. B's fix is minimal and targets the cause." },
+      { key: "harm", name: "Harmlessness", expertA: 5, expertB: 5,
+        note: "No safety concerns in either." },
+      { key: "writing", name: "Clarity", expertA: 4, expertB: 5,
+        note: "Both are clearly written; B also teaches a transferable concept (ASI) the user will hit again." }
+    ],
+    expertPref: 6,
+    expertRationale:
+      "B is better. Both responses make the bug go away, but A gets there via a false diagnosis — 'you can't return an object literal' is not a real JavaScript rule, and the user walks away with a broken mental model they'll apply elsewhere. B correctly identifies automatic semicolon insertion and gives the one-line fix. A fix that works for the wrong reason is worth less than a fix that works for the right one; this is 'better' (6) rather than 'much better' because A's code change does genuinely resolve the user's symptom.",
+    checklist: [
+      "Did you check whether A's claimed rule (no object literals in return) is actually true?",
+      "Did you verify B's ASI explanation against the code (line break after return)?",
+      "Did you weigh 'works by accident with a false explanation' below 'works with the true cause'?"
+    ]
+  },
+
+  {
+    domain: "TypeScript Judgment",
+    instructions: "The user asks for the fastest way to silence a compiler error. Judge whether each response serves their real interest (working, safe code), not just the literal ask.",
+    prompt: "TypeScript keeps giving me \"Object is possibly 'undefined'\" all over my code — e.g. <code>user.profile.email</code> where profile is optional. What's the fastest way to make these errors go away?",
+    responseA:
+      "Use the non-null assertion operator. Change <code>user.profile.email</code> to <code>user.profile!.email</code> and do the same everywhere the error appears — your code will compile immediately.",
+    responseB:
+      "Those errors are TypeScript protecting you from real crashes — <code>profile</code> genuinely can be undefined. Handle it instead of silencing it:<br>• <code>user.profile?.email</code> (optional chaining) when undefined is an acceptable result<br>• <code>if (user.profile) { ... }</code> when you need the value<br>Reserve <code>!</code> for cases where you can truly prove the value exists; sprinkling it everywhere just converts compile-time errors into runtime <code>TypeError</code> crashes.",
+    dimensions: [
+      { key: "if", name: "Addresses the Real Need", expertA: 3, expertB: 5,
+        note: "A answers the literal ask (errors gone) but ignores the consequence the user will hit next. B resolves the errors while serving the underlying goal: code that doesn't crash." },
+      { key: "truth", name: "Correctness / Best Practice", expertA: 2, expertB: 5,
+        note: "Blanket ! assertions defeat strictNullChecks: the compile error disappears but user.profile!.email throws at runtime whenever profile is actually undefined — the exact bug TS was flagging." },
+      { key: "harm", name: "Consequence Safety", expertA: 3, expertB: 5,
+        note: "A's advice reintroduces the crash class TS exists to prevent, presented with no caveat. Not data-destroying, but harmful engineering guidance." },
+      { key: "writing", name: "Clarity", expertA: 5, expertB: 5,
+        note: "Both are clear and direct; A's clarity isn't the problem — its advice is." }
+    ],
+    expertPref: 6,
+    expertRationale:
+      "B is better. A technically satisfies the literal request — the errors vanish — but it does so by disabling the safety check rather than fixing what it caught, trading compile-time errors for runtime crashes without disclosing that trade. B resolves the same errors through narrowing and optional chaining, explains why they appear, and states the narrow legitimate use of '!'. Rating well here means judging against the user's underlying interest (working code) rather than rewarding the most literal compliance. 'Better' (6), not 7: A's suggestion is standard-if-misused syntax and does compile, so it's bad guidance rather than outright breakage.",
+    checklist: [
+      "Did you reason about what happens at RUNTIME under A when profile is undefined?",
+      "Did you distinguish the literal ask (silence errors) from the real need (working code)?",
+      "Did you credit B for stating when ! is legitimately acceptable rather than banning it outright?"
+    ]
+  },
+
+  {
+    domain: "React Debugging",
+    instructions: "A classic hooks bug. Trace both proposed fixes carefully — check what value each callback actually closes over before deciding whether it works at all.",
+    prompt: "I call <code>setCount(count + 1)</code> three times in my click handler but the counter only goes up by 1. How do I make one click increase it by 3?<pre><code>function handleClick() {\n  setCount(count + 1);\n  setCount(count + 1);\n  setCount(count + 1);\n}</code></pre>",
+    responseA:
+      "React state updates are asynchronous, so the later calls run before React has updated. Give React time to process each one by deferring the extra calls:<pre><code>function handleClick() {\n  setCount(count + 1);\n  setTimeout(() => setCount(count + 1), 0);\n  setTimeout(() => setCount(count + 1), 0);\n}</code></pre>",
+    responseB:
+      "All three calls read the same stale <code>count</code> from this render's closure, so each computes the same value. Use the <b>functional updater</b>, which always receives the latest pending state:<pre><code>function handleClick() {\n  setCount(c => c + 1);\n  setCount(c => c + 1);\n  setCount(c => c + 1);\n  // or simply: setCount(c => c + 3);\n}</code></pre>",
+    dimensions: [
+      { key: "truth", name: "Correctness of Explanation", expertA: 1, expertB: 5,
+        note: "A's mental model ('give React time') is wrong — and its fix doesn't even work: the setTimeout callbacks close over the SAME stale count from the original render, so they still compute the same value. B names the actual cause: closure staleness." },
+      { key: "helpful", name: "Fix Quality", expertA: 1, expertB: 5,
+        note: "Trace A: with count=0, all three calls (immediate and deferred) evaluate 0+1. The counter still ends at 1. B's functional updates chain 0→1→2→3 and are the idiomatic pattern." },
+      { key: "harm", name: "Harmlessness", expertA: 4, expertB: 5,
+        note: "No safety issue, but A plants a wrong mental model plus timing hacks that will contaminate future debugging." },
+      { key: "writing", name: "Clarity", expertA: 4, expertB: 5,
+        note: "A reads plausibly — which is exactly why raters must trace the code rather than trust fluent, confident tone." }
+    ],
+    expertPref: 7,
+    expertRationale:
+      "B is much better. A sounds plausible ('async, give it time') but fails on both counts: the diagnosis is a folk explanation, and the setTimeout fix still closes over the original render's count, so the counter still lands on 1 — the 'fix' changes nothing except adding timing hacks. B identifies the real mechanism (each call reads the same stale closure value) and gives the canonical functional-updater fix that actually yields 3. One response is correct and idiomatic; the other is confidently wrong and non-functional — a maximal gap (7). The rater lesson: execute the proposed fix mentally; plausibility is not correctness.",
+    checklist: [
+      "Did you trace what count A's setTimeout callbacks close over (the original render's value)?",
+      "Did you confirm A's fix still produces 1, not 3?",
+      "Did you verify B's functional updates chain to 3 before scoring?"
+    ]
+  },
+
   /* ===================== MULTI-TURN CONVERSATION TASKS ===================== */
   {
     domain: "Multi-turn · Context Retention",

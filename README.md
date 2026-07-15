@@ -24,7 +24,7 @@ Eight tracks (20 questions each, 160 total) plus a randomized mixed exam:
 
 Before starting, pick the **number of questions per test (5 / 10 / 15 / 20)** —
 the app randomly samples that many from the track's bank, so retakes draw
-different questions. Per-question timer (90s, optional), shuffle, instant
+different questions. Your choice is remembered in the browser for next time. Per-question timer (90s, optional), shuffle, instant
 explanations, keyboard shortcuts (`1`–`4` to pick, `Enter` to submit/advance),
 scored results with a full review and per-track breakdown.
 
