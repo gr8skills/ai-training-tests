@@ -370,6 +370,62 @@ const TASKS = [
     ]
   },
 
+  {
+    domain: "SQL / Data Safety",
+    instructions: "A user asks how to clean up production data. Check each response's SQL carefully — judge both correctness and how safely it treats irreversible operations.",
+    prompt: "Our users table has test accounts I need to remove from production — every account whose email ends in @test.example.com. What should I run?",
+    responseA:
+      "Run this to clear out the users table and re-import only the real accounts afterwards:<pre><code>DELETE FROM users;</code></pre>It's the fastest way to be sure no test data is left.",
+    responseB:
+      "First preview exactly what will be removed:<pre><code>SELECT id, email FROM users\nWHERE email LIKE '%@test.example.com';</code></pre>If the list looks right, delete inside a transaction so you can back out:<pre><code>BEGIN;\nDELETE FROM users\nWHERE email LIKE '%@test.example.com';\n-- check the reported row count, then\nCOMMIT;  -- or ROLLBACK if it's wrong</code></pre>",
+    dimensions: [
+      { key: "if", name: "Instruction Following (remove ONLY test accounts)", expertA: 1, expertB: 5,
+        note: "The user scoped the deletion to @test.example.com emails. A's statement has no WHERE clause — it deletes every user in production. B targets exactly the requested rows." },
+      { key: "truth", name: "Correctness / Safety of SQL", expertA: 1, expertB: 5,
+        note: "A destroys all production accounts and hand-waves recovery ('re-import afterwards' — from what backup?). B previews with SELECT, uses a transaction, and verifies the row count before committing." },
+      { key: "harm", name: "Harmlessness", expertA: 1, expertB: 5,
+        note: "Confidently recommending an unscoped DELETE on production is catastrophic, data-destroying advice — the SQL equivalent of the git reset --hard task." },
+      { key: "writing", name: "Clarity", expertA: 4, expertB: 5,
+        note: "Both are clear; A's brevity makes the destructive command look routine." }
+    ],
+    expertPref: 7,
+    expertRationale:
+      "B is much better. The user asked to remove a specific subset, and A's DELETE has no WHERE clause — it wipes every account in production, with only a vague 're-import' as a recovery plan. B does exactly what was asked and models professional data hygiene: preview via SELECT, execute inside a transaction, verify the affected row count, and keep ROLLBACK available. When one response is scoped and reversible and the other is unscoped destruction of production data, the gap is maximal (7). Raters must execute destructive SQL mentally before trusting it.",
+    checklist: [
+      "Did you notice A's DELETE has no WHERE clause at all?",
+      "Did you credit B's preview-first and transaction pattern, not just its WHERE?",
+      "Did you rate A on its real-world consequence, not its confident tone?"
+    ]
+  },
+
+  {
+    domain: "Verilog / HDL",
+    instructions: "A hardware-design question. Both responses diagnose a swap that doesn't work. Trace the assignment semantics yourself before scoring — one diagnosis is a common folk error.",
+    prompt: "In my clocked block I try to swap two registers but after the clock edge both end up holding the same value. Why?<pre><code>always @(posedge clk) begin\n  a = b;\n  b = a;\nend</code></pre>",
+    responseA:
+      "Your problem is that you assign in the wrong order — Verilog executes bottom-up inside always blocks, so you should write <code>b = a;</code> before <code>a = b;</code>. Reversing the two lines will make the swap work.",
+    responseB:
+      "You're using <b>blocking assignments</b>: <code>a = b</code> completes immediately, so the next line copies the NEW a — both registers end up with the original b. Use <b>non-blocking</b> assignments, which sample all right-hand sides before updating, exactly like real flip-flops on a clock edge:<pre><code>always @(posedge clk) begin\n  a &lt;= b;\n  b &lt;= a;  // swaps correctly\nend</code></pre>",
+    dimensions: [
+      { key: "truth", name: "Correctness of Diagnosis", expertA: 1, expertB: 5,
+        note: "A is wrong twice: Verilog executes procedural statements top-down, and reordering just flips the failure (both registers get the original a). B names the real cause — blocking semantics — and its fix genuinely swaps." },
+      { key: "helpful", name: "Fix Quality", expertA: 1, expertB: 5,
+        note: "Trace A's 'fix': b = a runs first, then a = b copies the new b — both hold the original a. Still broken. B's non-blocking version samples both RHS values pre-edge and swaps correctly." },
+      { key: "harm", name: "Harmlessness", expertA: 4, expertB: 5,
+        note: "No safety issue, but A's invented 'bottom-up execution' rule would corrupt the user's mental model of every always block they write." },
+      { key: "writing", name: "Clarity", expertA: 4, expertB: 5,
+        note: "A is confidently phrased — which is exactly why the rater must simulate the code rather than trust fluency." }
+    ],
+    expertPref: 7,
+    expertRationale:
+      "B is much better. A invents a false execution rule (Verilog runs procedural code top-down, not bottom-up) and its proposed reorder still fails — the swap just breaks in the mirror-image way, with both registers holding the original a. B identifies the actual mechanism (blocking assignments complete immediately) and gives the canonical non-blocking fix that hardware designers use precisely because it mirrors flip-flop behavior. Confidently wrong diagnosis plus a non-working fix against a correct, idiomatic explanation is a maximal gap (7).",
+    checklist: [
+      "Did you trace A's reordered version and confirm both registers end up with the original a?",
+      "Did you verify B's claim that non-blocking samples all RHS values before updating?",
+      "Did you catch A's fabricated 'bottom-up execution' rule?"
+    ]
+  },
+
   /* ===================== MULTI-TURN CONVERSATION TASKS ===================== */
   {
     domain: "Multi-turn · Context Retention",

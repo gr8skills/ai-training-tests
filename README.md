@@ -9,7 +9,7 @@ There are **two modes** on the home screen.
 
 ### 1. Knowledge assessments (multiple choice)
 
-Eight tracks (20 questions each, 160 total) plus a randomized mixed exam:
+Ten tracks (20 questions each, 200 total) plus a randomized mixed exam:
 
 | Track | What it drills |
 |-------|----------------|
@@ -21,6 +21,8 @@ Eight tracks (20 questions each, 160 total) plus a randomized mixed exam:
 | 🟨 **JavaScript Skills Verification** | Coercion, scope, closures, the event loop, async, and common traps |
 | 🔷 **TypeScript Skills Verification** | Narrowing, generics, utility types, and what TS does (and doesn't) at runtime |
 | ⚛️ **React Skills Verification** | State updates, effects, keys, controlled inputs, re-render behavior |
+| 🔌 **Verilog Skills Verification** | Blocking vs non-blocking, latch inference, sensitivity lists, simulation vs synthesis |
+| 🗄️ **SQL Skills Verification** | Joins, aggregation, NULL traps, safe data modification, reading result sets |
 
 Before starting, pick the **number of questions per test (5 / 10 / 15 / 20)** —
 the app randomly samples that many from the track's bank, so retakes draw

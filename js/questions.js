@@ -1975,6 +1975,509 @@ const QUESTIONS = {
         explanation: "<code>Math.random()</code> generates a <b>new key every render</b>, so React treats every item as brand new: components remount, inputs lose focus and state, performance tanks. It silences the warning while making everything worse. Keys must be <b>stable across renders</b> and unique among siblings — an id from the data."
       }
     ]
+  },
+
+  /* ================= VERILOG SKILLS ================= */
+  verilog: {
+    name: "Verilog Skills Verification",
+    icon: "🔌",
+    desc: "HDL fluency: blocking vs non-blocking, latch inference, sensitivity lists, and simulation vs synthesis.",
+    items: [
+      {
+        type: "Core concept",
+        prompt: "In a clocked <code>always @(posedge clk)</code> block describing flip-flops, which assignment operator should you use, and why?",
+        choices: [
+          "Blocking (=) — it executes faster in hardware.",
+          "Non-blocking (<=) — all RHS values are sampled first, then updated together, matching how real flip-flops capture data on a clock edge.",
+          "Either — they synthesize identically.",
+          "assign — procedural blocks require it."
+        ],
+        answer: 1,
+        explanation: "Non-blocking (<code>&lt;=</code>) schedules updates: every right-hand side is evaluated with pre-edge values, then all registers update together — exactly like real flip-flops. Blocking (<code>=</code>) executes sequentially, creating order-dependent behavior and simulation/synthesis mismatches in sequential logic. Rule: non-blocking for sequential, blocking for combinational."
+      },
+      {
+        type: "Predict the behavior",
+        prompt: "On a clock edge, what do these two versions do?",
+        context: "<pre><code>// Version 1\nalways @(posedge clk) begin\n  a &lt;= b;\n  b &lt;= a;\nend\n\n// Version 2\nalways @(posedge clk) begin\n  a = b;\n  b = a;\nend</code></pre>",
+        choices: [
+          "Both swap a and b.",
+          "Version 1 swaps a and b; Version 2 leaves both equal to the original b.",
+          "Version 1 fails; Version 2 swaps.",
+          "Both set a and b to zero."
+        ],
+        answer: 1,
+        explanation: "Non-blocking samples both RHS values before any update, so Version 1 genuinely <b>swaps</b>. In Version 2, <code>a = b</code> completes first, so <code>b = a</code> copies the NEW a — both end up holding the original b. This is the canonical demonstration of why sequential logic needs <code>&lt;=</code>."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>wire</code> and <code>reg</code> in Verilog-2001?",
+        choices: [
+          "wire is combinational, reg always becomes a physical register.",
+          "reg can be assigned inside procedural (always/initial) blocks; wire is driven by continuous assignments or ports. A reg does NOT necessarily synthesize to a flip-flop.",
+          "reg is for testbenches only.",
+          "They are interchangeable keywords."
+        ],
+        answer: 1,
+        explanation: "The distinction is about <b>who drives it</b>: procedural code assigns to <code>reg</code>; <code>assign</code>/module outputs drive <code>wire</code>. A reg assigned in a combinational <code>always @(*)</code> block synthesizes to gates, not a flip-flop — the name is historical and famously misleading."
+      },
+      {
+        type: "Find the bug",
+        prompt: "Synthesis reports an inferred latch for this combinational block. Why?",
+        context: "<pre><code>always @(*) begin\n  if (sel)\n    y = a;\nend</code></pre>",
+        choices: [
+          "The sensitivity list is wrong.",
+          "When sel is 0, y is never assigned, so it must hold its old value — which requires a latch. Add an else (or a default assignment).",
+          "Latches are always inferred from if statements.",
+          "y should be a wire."
+        ],
+        answer: 1,
+        explanation: "Combinational logic must define its output for <b>every</b> input combination. With no assignment on the <code>sel==0</code> path, the tool inserts a transparent latch to 'remember' y. Fix: <code>else y = b;</code> or a default (<code>y = 1'b0;</code>) before the if. Unintended latches are a top interview/screening topic."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does <code>always @(*)</code> mean, and what kind of logic is it for?",
+        choices: [
+          "Runs once at time zero, like initial.",
+          "Automatically builds a sensitivity list from every signal read in the block — the standard way to describe combinational logic.",
+          "Triggers on every clock edge.",
+          "It's invalid syntax."
+        ],
+        answer: 1,
+        explanation: "<code>@(*)</code> (Verilog-2001) infers the complete sensitivity list, eliminating the classic bug of forgetting a signal. Use it for combinational blocks; use <code>@(posedge clk)</code> for sequential. Missing signals in a manual list cause simulation to disagree with synthesized hardware."
+      },
+      {
+        type: "Predict the behavior",
+        prompt: "This block uses a manual sensitivity list. What's the danger?",
+        context: "<pre><code>always @(a) begin\n  y = a & b;\nend</code></pre>",
+        choices: [
+          "It won't compile.",
+          "Simulation only re-evaluates y when a changes — changes to b are missed — but synthesis builds a plain AND gate, so simulation and hardware disagree.",
+          "The AND of two signals needs assign.",
+          "y updates too often."
+        ],
+        answer: 1,
+        explanation: "Synthesis largely ignores sensitivity lists and builds the combinational logic; simulation obeys them. With <code>b</code> missing, simulation shows stale y when b changes while the real gate responds — a <b>simulation/synthesis mismatch</b>, one of the most-tested HDL pitfalls. <code>always @(*)</code> prevents it."
+      },
+      {
+        type: "Core concept",
+        prompt: "Verilog signals have four states: 0, 1, x, z. What does <code>z</code> represent?",
+        choices: [
+          "An unknown or uninitialized value.",
+          "High impedance — the signal is undriven/disconnected, as when a tri-state driver is disabled.",
+          "A metastable voltage.",
+          "Logic zero with weak drive."
+        ],
+        answer: 1,
+        explanation: "<code>z</code> is <b>high impedance</b>: nothing is driving the net (tri-state buses, disabled drivers). <code>x</code> is the <em>unknown</em> state (uninitialized regs, bus contention). Reading z through a gate typically produces x."
+      },
+      {
+        type: "Predict the output",
+        prompt: "For <code>reg [7:0] data;</code>, what does the declaration mean, and what is <code>data[7]</code>?",
+        choices: [
+          "A 7-bit register; data[7] is out of range.",
+          "An 8-bit register with bit 7 as the MSB (the [MSB:LSB] convention).",
+          "An array of 8 registers of unknown width.",
+          "A 16-bit register split in two halves."
+        ],
+        answer: 1,
+        explanation: "<code>[7:0]</code> declares an 8-bit vector, indexed 7 down to 0 — <code>data[7]</code> is the most-significant bit, <code>data[0]</code> the least. (An <em>array</em> of registers would be <code>reg [7:0] mem [0:15];</code> — width first, then depth.)"
+      },
+      {
+        type: "Predict the output",
+        prompt: "With <code>a = 4'b1010</code> and <code>b = 2'b11</code>, what is <code>{a, b}</code>?",
+        choices: [
+          "4'b1010 — concatenation keeps the wider operand.",
+          "6'b101011 — the vectors joined together, a in the high bits.",
+          "6'b111010 — b in the high bits.",
+          "A syntax error; widths must match."
+        ],
+        answer: 1,
+        explanation: "<code>{ }</code> is <b>concatenation</b>: operands are joined left-to-right, first operand in the most-significant position → 6 bits, <code>101011</code>. Related: replication <code>{3{2'b01}}</code> = <code>6'b010101</code> — both appear constantly in real RTL."
+      },
+      {
+        type: "Best practice",
+        prompt: "Why should a <code>case</code> statement in a combinational block include a <code>default</code> branch?",
+        choices: [
+          "Verilog requires it syntactically.",
+          "Without covering all input values, unlisted cases leave the output unassigned — inferring a latch. default guarantees full coverage.",
+          "It makes simulation faster.",
+          "default is only needed in testbenches."
+        ],
+        answer: 1,
+        explanation: "Same rule as the missing-else: any input pattern that assigns nothing forces the tool to remember the old output → latch. A <code>default</code> (or full-case coverage plus a pre-assignment) keeps the logic purely combinational. This pairs with using <code>casez</code> carefully — wildcard matching can silently mask real values."
+      },
+      {
+        type: "Core concept",
+        prompt: "What is an <code>initial</code> block, and can it be synthesized into an ASIC?",
+        choices: [
+          "A block that runs once at simulation time zero — primarily a testbench/simulation construct, not general synthesizable logic.",
+          "The hardware power-on circuit; fully synthesizable everywhere.",
+          "A loop that runs continuously.",
+          "The reset input of a flip-flop."
+        ],
+        answer: 0,
+        explanation: "<code>initial</code> executes once at t=0 — it's the backbone of testbenches (stimulus, clocks). For ASIC logic it isn't synthesizable; hardware initialization uses reset logic instead. (Nuance: FPGA tools do honor initial values for register power-up — but the portable design practice is an explicit reset.)"
+      },
+      {
+        type: "Testbench",
+        prompt: "In a testbench, what's the difference between <code>$display</code> and <code>$monitor</code>?",
+        choices: [
+          "$display prints once when the statement executes; $monitor re-prints automatically whenever any listed signal changes.",
+          "$monitor writes to a file; $display to the console.",
+          "$display is synthesizable; $monitor is not.",
+          "They're identical."
+        ],
+        answer: 0,
+        explanation: "<code>$display</code> is a one-shot print at that simulation moment; <code>$monitor</code> registers the argument list and prints on every change (only one monitor active at a time). Use $display inside stimulus sequences, $monitor for continuous tracing."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does <code>#10</code> mean in <code>#10 a = 1;</code> and what happens to it in synthesis?",
+        choices: [
+          "Wait 10 clock cycles; synthesizes to a counter.",
+          "Advance simulation time by 10 time units before executing — synthesis ignores delays entirely; real timing comes from the circuit itself.",
+          "Repeat the assignment 10 times.",
+          "Set a to 10."
+        ],
+        answer: 1,
+        explanation: "<code>#</code> delays are a <b>simulation-only</b> concept (scaled by `timescale`). Synthesis tools discard them — you cannot create hardware timing by writing #10. Needing a real delay means building it from clocked logic (counters/pipeline stages). Relying on # in RTL is a classic beginner error."
+      },
+      {
+        type: "Core concept",
+        prompt: "What is a <code>parameter</code> used for?",
+        context: "<pre><code>module fifo #(parameter WIDTH = 8, DEPTH = 16)\n  (input [WIDTH-1:0] din, ...);</code></pre>",
+        choices: [
+          "A runtime variable the hardware can change.",
+          "A compile-time constant that makes the module configurable — each instantiation can override it (e.g. #(.WIDTH(32))).",
+          "A simulation-only debug flag.",
+          "The module's port list."
+        ],
+        answer: 1,
+        explanation: "Parameters are elaboration-time constants enabling <b>reusable, scalable RTL</b>: one FIFO source, instantiated at any width/depth via <code>fifo #(.WIDTH(32), .DEPTH(64)) u1 (...)</code>. They cannot change at runtime — that would require actual signals."
+      },
+      {
+        type: "Core concept",
+        prompt: "When do you use a continuous assignment (<code>assign y = a &amp; b;</code>)?",
+        choices: [
+          "To drive a wire with always-active combinational logic outside procedural blocks.",
+          "To create a flip-flop.",
+          "Only inside always blocks.",
+          "To initialize registers at power-up."
+        ],
+        answer: 0,
+        explanation: "<code>assign</code> permanently drives a net: whenever an input changes, the output re-evaluates — pure combinational logic in one line. It lives at module scope (not inside always), targets wires (not regs, in Verilog-2001), and is ideal for simple glue logic."
+      },
+      {
+        type: "Predict the output",
+        prompt: "A 2-bit counter starts at 0. What does it hold after the 5th clock edge?",
+        context: "<pre><code>reg [1:0] count = 0;\nalways @(posedge clk)\n  count &lt;= count + 1;</code></pre>",
+        choices: ["5", "1 — the 2-bit counter wraps: 0→1→2→3→0→1", "3 — it saturates at the maximum", "x — overflow is undefined"],
+        answer: 1,
+        explanation: "A 2-bit register holds 0–3 and <b>wraps on overflow</b> (arithmetic is modulo 2ⁿ): edges take it 1, 2, 3, 0, then <b>1</b> on the fifth. No saturation, no x — fixed-width wraparound is well-defined and a favorite trick question."
+      },
+      {
+        type: "Predict the output",
+        prompt: "With <code>reg [3:0] a = 4'b1011;</code>, what are <code>&amp;a</code> and <code>|a</code>?",
+        choices: [
+          "&a = 0, |a = 1 — reduction operators AND/OR all bits of the vector together.",
+          "&a = 1011, |a = 1011.",
+          "Both are 1.",
+          "Syntax error — & needs two operands."
+        ],
+        answer: 0,
+        explanation: "A unary <code>&amp;</code>/<code>|</code>/<code>^</code> is a <b>reduction operator</b>: it folds the vector to one bit. <code>&amp;1011</code> = 1&0&1&1 = <b>0</b>; <code>|1011</code> = <b>1</b>. (<code>^a</code> gives parity.) Distinct from the two-operand bitwise forms."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>&amp;</code> and <code>&amp;&amp;</code>?",
+        choices: [
+          "None — both are logical AND.",
+          "& is bitwise (operates per-bit across vectors); && is logical (treats each whole operand as true/false, yielding 1 bit).",
+          "&& is only valid in testbenches.",
+          "& is for wires, && for regs."
+        ],
+        answer: 1,
+        explanation: "<code>4'b1100 &amp; 4'b1010</code> = <code>4'b1000</code> (per-bit), while <code>4'b1100 &amp;&amp; 4'b1010</code> = <b>1</b> (both non-zero → true). Using & where && is meant (or vice versa) compiles fine and misbehaves quietly — exactly the sort of subtle bug reviews screen for."
+      },
+      {
+        type: "Design judgment",
+        prompt: "In the standard two-process FSM style, how are the state register and next-state logic split?",
+        choices: [
+          "Both in one big clocked block with blocking assignments.",
+          "A clocked always block updates state <= next_state (non-blocking); a separate combinational always @(*) computes next_state from state and inputs.",
+          "Two clocked blocks, one per state bit.",
+          "FSMs require SystemVerilog."
+        ],
+        answer: 1,
+        explanation: "The canonical pattern: sequential block = just the register (with reset), combinational block = the case-based next-state/output logic with defaults to avoid latches. The separation keeps timing clean and makes the FSM readable and synthesizable — screening tasks often ask you to spot deviations from it."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does an <code>inout</code> port declare, and what's a typical use?",
+        choices: [
+          "A port that is both readable and writable internally — any signal qualifies.",
+          "A bidirectional port, driven with tri-state logic (z when not driving) — typical for shared buses like I2C SDA or memory data lines.",
+          "An output with an internal feedback path.",
+          "A debug-only port."
+        ],
+        answer: 1,
+        explanation: "<code>inout</code> models bidirectional pins: the module drives the line only when enabled (<code>assign sda = drive_en ? value : 1'bz;</code>) and reads it otherwise. Internal FPGA logic avoids tri-states; genuine inouts belong at chip pads/shared external buses."
+      }
+    ]
+  },
+
+  /* ================= SQL SKILLS ================= */
+  sql: {
+    name: "SQL Skills Verification",
+    icon: "🗄️",
+    desc: "Query fluency: joins, aggregation, NULL traps, safe data modification, and reading result sets.",
+    items: [
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>WHERE</code> and <code>HAVING</code>?",
+        choices: [
+          "They're interchangeable filters.",
+          "WHERE filters rows before grouping; HAVING filters groups after aggregation — so aggregate conditions like COUNT(*) > 5 belong in HAVING.",
+          "HAVING is faster than WHERE.",
+          "WHERE works only on indexed columns."
+        ],
+        answer: 1,
+        explanation: "Logical order: rows are filtered by <b>WHERE</b>, then grouped, then groups are filtered by <b>HAVING</b>. That's why <code>WHERE COUNT(*) > 5</code> is an error — the aggregate doesn't exist yet. Filter early with WHERE when you can; it's also cheaper."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>INNER JOIN</code> and <code>LEFT JOIN</code>?",
+        choices: [
+          "INNER JOIN keeps only rows with matches in both tables; LEFT JOIN keeps every left-table row, filling unmatched right-side columns with NULL.",
+          "LEFT JOIN is INNER JOIN with the tables swapped.",
+          "INNER JOIN is faster but returns the same rows.",
+          "LEFT JOIN ignores the ON condition."
+        ],
+        answer: 0,
+        explanation: "INNER = intersection (match required both sides). LEFT = all left rows, matched or not — unmatched ones get NULLs on the right. Choosing wrong silently drops rows (or invents NULL-padded ones), which is exactly the judgment screenings test."
+      },
+      {
+        type: "Predict the result",
+        prompt: "customers has 4 rows; one customer, Dana, has no orders. What does this return for Dana?",
+        context: "<pre><code>SELECT c.name, o.total\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.id;</code></pre>",
+        choices: [
+          "Dana is omitted from the results.",
+          "A row: Dana with total = NULL.",
+          "A row: Dana with total = 0.",
+          "An error — every customer must have orders."
+        ],
+        answer: 1,
+        explanation: "LEFT JOIN preserves every customers row; where no order matches, the order columns are <b>NULL</b> (not 0 — SQL never invents values). To find customers with no orders, the classic pattern is this join plus <code>WHERE o.id IS NULL</code>."
+      },
+      {
+        type: "Find the error",
+        prompt: "Why does this query fail (in standard SQL)?",
+        context: "<pre><code>SELECT department, name, COUNT(*)\nFROM employees\nGROUP BY department;</code></pre>",
+        choices: [
+          "COUNT(*) can't be combined with other columns.",
+          "name is neither grouped nor aggregated — each department group has many names, so SQL can't pick one.",
+          "GROUP BY must list every selected column including COUNT.",
+          "It needs a HAVING clause."
+        ],
+        answer: 1,
+        explanation: "Every selected column must be in <code>GROUP BY</code> or inside an aggregate. A department group contains many employees — which single <code>name</code> would the row show? Fix: group by both columns, aggregate the name (e.g. MIN(name)), or rethink the query. (MySQL's legacy lenient mode masks this; standard SQL rejects it.)"
+      },
+      {
+        type: "NULL trap",
+        prompt: "Why does <code>WHERE email = NULL</code> return zero rows even when NULL emails exist?",
+        choices: [
+          "NULL rows are hidden by default.",
+          "Any comparison with NULL yields UNKNOWN, never TRUE — you must write WHERE email IS NULL.",
+          "The column must be cast to text first.",
+          "= NULL matches empty strings instead."
+        ],
+        answer: 1,
+        explanation: "NULL means 'unknown', and SQL uses three-valued logic: <code>anything = NULL</code> evaluates to UNKNOWN, which WHERE treats as not-true. The dedicated predicates <code>IS NULL</code> / <code>IS NOT NULL</code> exist precisely for this. The same trap hides in <code>!=</code> comparisons and NOT IN with NULLs."
+      },
+      {
+        type: "Predict the result",
+        prompt: "orders.amount contains: 10, 20, NULL. What do these return?",
+        context: "<pre><code>SELECT COUNT(*), COUNT(amount), SUM(amount), AVG(amount)\nFROM orders;</code></pre>",
+        choices: [
+          "3, 3, 30, 10",
+          "3, 2, 30, 15 — COUNT(*) counts rows; the other aggregates skip NULLs, so AVG divides by 2.",
+          "3, 2, 30, 10 — AVG divides by the row count.",
+          "2, 2, 30, 15 — NULL rows are excluded everywhere."
+        ],
+        answer: 1,
+        explanation: "<code>COUNT(*)</code> counts rows (3). <code>COUNT(amount)</code>, SUM, and AVG ignore NULLs — so COUNT(amount)=2, SUM=30, and <b>AVG = 30/2 = 15</b>, not 30/3. Whether NULLs should count as zero is a business decision you'd implement explicitly with COALESCE."
+      },
+      {
+        type: "Command usage",
+        prompt: "Which query returns the 5 most expensive products?",
+        choices: [
+          "SELECT * FROM products ORDER BY price DESC LIMIT 5;",
+          "SELECT TOP price FROM products LIMIT 5;",
+          "SELECT * FROM products WHERE price = MAX(price) LIMIT 5;",
+          "SELECT * FROM products ORDER BY price LIMIT 5;"
+        ],
+        answer: 0,
+        explanation: "Sort descending, then take 5: <code>ORDER BY price DESC LIMIT 5</code>. Option D sorts ascending (5 cheapest). C misuses an aggregate in WHERE. (SQL Server spells it <code>SELECT TOP 5 ... ORDER BY</code>, but B's syntax is valid nowhere.)"
+      },
+      {
+        type: "Safety judgment",
+        prompt: "You mean to remove one user but run: <code>DELETE FROM users;</code> — what happens?",
+        choices: [
+          "The database asks for confirmation.",
+          "Every row in users is deleted — DELETE without WHERE applies to the whole table. Guard with a WHERE, a prior SELECT preview, and a transaction.",
+          "Nothing; DELETE requires WHERE.",
+          "Only the first row is deleted."
+        ],
+        answer: 1,
+        explanation: "SQL executes exactly what you wrote: no WHERE = <b>all rows</b>, no confirmation. Safe habit: write the <code>SELECT</code> first to preview affected rows, convert it to DELETE, and run inside a transaction (<code>BEGIN; ... ROLLBACK/COMMIT;</code>). Same discipline applies to UPDATE."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>DELETE</code>, <code>TRUNCATE</code>, and <code>DROP</code> on a table?",
+        choices: [
+          "All three are synonyms for removing data.",
+          "DELETE removes rows (optionally filtered, transactional); TRUNCATE quickly empties ALL rows keeping the structure; DROP removes the table itself.",
+          "TRUNCATE removes the table; DROP empties it.",
+          "DELETE is DDL; the others are DML."
+        ],
+        answer: 1,
+        explanation: "<b>DELETE</b> is row-level DML (WHERE-able, rollback-friendly, fires triggers). <b>TRUNCATE</b> is a fast bulk wipe of every row — structure stays, usually no per-row triggers. <b>DROP</b> deletes the table, data and definition. Escalating destructiveness; know which you're reaching for."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does a FOREIGN KEY constraint enforce?",
+        choices: [
+          "That the column is unique.",
+          "Referential integrity: the value must exist in the referenced table's key column — e.g. no order can point at a customer_id that doesn't exist.",
+          "That the column is indexed.",
+          "Automatic cascading deletes, always."
+        ],
+        answer: 1,
+        explanation: "A FK guarantees the relationship is valid: inserting an order with a nonexistent customer_id fails, and deleting a referenced customer is blocked (or handled per the declared action — CASCADE/SET NULL are opt-in, not automatic). PRIMARY KEY = identity; FOREIGN KEY = valid reference."
+      },
+      {
+        type: "Core concept",
+        prompt: "What's the difference between <code>UNION</code> and <code>UNION ALL</code>?",
+        choices: [
+          "UNION ALL includes duplicate rows; UNION removes them (and pays the deduplication cost).",
+          "UNION joins tables side by side; UNION ALL stacks them.",
+          "UNION ALL also includes NULL rows.",
+          "No difference."
+        ],
+        answer: 0,
+        explanation: "Both stack compatible result sets vertically. <b>UNION</b> deduplicates (an implicit DISTINCT across the combined result — extra sort/hash work); <b>UNION ALL</b> keeps everything and is faster. Default to UNION ALL unless you specifically need dedup — a common efficiency finding."
+      },
+      {
+        type: "Predict the result",
+        prompt: "What does <code>WHERE name LIKE 'J_n%'</code> match?",
+        choices: [
+          "Names containing 'Jn' anywhere.",
+          "Names whose 1st letter is J, 3rd letter is n, with anything after — e.g. Jan, Jane, Jonathan (J-o-n...).",
+          "Only the exact string 'J_n'.",
+          "Names ending in n."
+        ],
+        answer: 1,
+        explanation: "<code>_</code> matches exactly one character, <code>%</code> matches zero or more. The pattern reads: J, any single character, n, then anything — so Jan ✓ (J-a-n), Jane ✓, Jonathan ✓ (J-o-n…), June ✓ (J-u-n-e), but James ✗ (third letter is m). Remember: <code>%</code> = any run of characters, <code>_</code> = exactly one position."
+      },
+      {
+        type: "Core concept",
+        prompt: "Is <code>WHERE price BETWEEN 10 AND 20</code> inclusive or exclusive of the endpoints?",
+        choices: [
+          "Exclusive of both — 10 and 20 don't match.",
+          "Inclusive of both — equivalent to price >= 10 AND price <= 20.",
+          "Inclusive of 10, exclusive of 20.",
+          "Depends on the column type."
+        ],
+        answer: 1,
+        explanation: "BETWEEN is <b>inclusive on both ends</b> in standard SQL. The classic trap is datetime ranges: <code>BETWEEN '2026-01-01' AND '2026-01-31'</code> cuts off most of Jan 31 when the column has a time part — prefer <code>>= start AND &lt; next_day</code> for dates."
+      },
+      {
+        type: "Design judgment",
+        prompt: "What does adding an index to a column do?",
+        choices: [
+          "Speeds up everything with no cost.",
+          "Speeds up lookups/joins/sorts on that column, but costs storage and slows every INSERT/UPDATE/DELETE that must maintain it.",
+          "Compresses the table.",
+          "Prevents duplicate values."
+        ],
+        answer: 1,
+        explanation: "An index (typically a B-tree) turns full-table scans into fast seeks for matching queries — but it's a data structure that must be updated on every write. Index the columns your WHERE/JOIN/ORDER BY actually use; don't index everything. (Uniqueness is a separate UNIQUE constraint/index.)"
+      },
+      {
+        type: "Find the error",
+        prompt: "Why does this fail in most databases?",
+        context: "<pre><code>SELECT price * quantity AS revenue\nFROM sales\nWHERE revenue > 1000;</code></pre>",
+        choices: [
+          "Aliases can't contain math.",
+          "WHERE is evaluated before SELECT, so the alias 'revenue' doesn't exist yet — repeat the expression in WHERE (or wrap in a subquery/CTE).",
+          "revenue is a reserved word.",
+          "The query is valid everywhere."
+        ],
+        answer: 1,
+        explanation: "Logical evaluation order is FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY. SELECT aliases are created near the end, so WHERE can't see them (ORDER BY can). Fix: <code>WHERE price * quantity > 1000</code>, or compute in a subquery/CTE and filter outside."
+      },
+      {
+        type: "Command usage",
+        prompt: "Which query finds customers who placed at least one order, using a subquery?",
+        choices: [
+          "SELECT * FROM customers WHERE id IN (SELECT customer_id FROM orders);",
+          "SELECT * FROM customers WHERE id = (SELECT customer_id FROM orders);",
+          "SELECT * FROM customers HAVING orders > 0;",
+          "SELECT * FROM customers JOIN orders;"
+        ],
+        answer: 0,
+        explanation: "<code>IN (subquery)</code> matches any id present in the order list. B's <code>=</code> errors as soon as the subquery returns more than one row. C references a column that doesn't exist; D is missing an ON condition (and would duplicate customers per order anyway). EXISTS is the equally correct — often faster — alternative."
+      },
+      {
+        type: "Predict the result",
+        prompt: "employees: Ann (Sales), Ben (Sales), Cy (IT). What does this return?",
+        context: "<pre><code>SELECT department, COUNT(*) AS n\nFROM employees\nGROUP BY department\nHAVING COUNT(*) >= 2;</code></pre>",
+        choices: [
+          "Sales 2 — only groups with 2+ members survive the HAVING filter.",
+          "Sales 2, IT 1.",
+          "One row: 3.",
+          "An error — HAVING can't use COUNT."
+        ],
+        answer: 0,
+        explanation: "GROUP BY makes two groups (Sales n=2, IT n=1); HAVING then keeps only groups meeting <code>COUNT(*) >= 2</code> → just <b>Sales, 2</b>. This WHERE-vs-HAVING flow — filter rows, group, filter groups — is the single most-tested aggregation concept."
+      },
+      {
+        type: "Safety judgment",
+        prompt: "You're about to run an UPDATE that changes prices. Which habit best protects production data?",
+        choices: [
+          "Run it fast so locks are short.",
+          "First run SELECT with the same WHERE to preview affected rows, then UPDATE inside a transaction and verify the row count before COMMIT.",
+          "Skip the WHERE clause to keep the query simple.",
+          "Take a screenshot of the table first."
+        ],
+        answer: 1,
+        explanation: "The professional pattern: preview (<code>SELECT ... WHERE ...</code>), execute in a transaction (<code>BEGIN</code>), check 'N rows updated' matches expectation, then <code>COMMIT</code> — or <code>ROLLBACK</code> if surprised. It converts irreversible mistakes into non-events; assessments reward this judgment explicitly."
+      },
+      {
+        type: "Core concept",
+        prompt: "What does <code>SELECT DISTINCT city FROM customers</code> do?",
+        choices: [
+          "Returns each different city once, collapsing duplicates.",
+          "Returns cities that appear exactly once.",
+          "Sorts the cities alphabetically.",
+          "Removes NULL cities."
+        ],
+        answer: 0,
+        explanation: "DISTINCT deduplicates the result rows — every city appears once regardless of how many customers share it. It does NOT mean 'unique occurrences only' (that's GROUP BY ... HAVING COUNT(*) = 1), doesn't sort, and a NULL city still appears (once)."
+      },
+      {
+        type: "Predict the result",
+        prompt: "Both tables have 3 rows; every order matches a customer, and one customer has 2 orders (another has 0). How many rows does an INNER JOIN of customers to orders on customer_id return?",
+        choices: [
+          "3 — one per customer.",
+          "3 — one per order: joins return one row per MATCH, so the 2-order customer appears twice and the 0-order customer not at all.",
+          "6 — every combination.",
+          "2 — only 1:1 matches."
+        ],
+        answer: 1,
+        explanation: "A join emits a row for each matching pair. Orders: 2 from the repeat customer + 1 from another = <b>3 rows</b>; the orderless customer vanishes (INNER). Understanding that joins can both drop and multiply rows — and that duplicates inflate SUMs downstream — is core query-reading skill."
+      }
+    ]
   }
 
 };
